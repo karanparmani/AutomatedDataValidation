@@ -1,0 +1,6 @@
+{
+  "name": "Digital Engineer",
+  "description": "Automated QA and domain-specific evidence validation middleware for AuditBoard, calculating Evidence Alignment Scores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
