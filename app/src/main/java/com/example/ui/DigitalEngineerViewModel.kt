@@ -40,7 +40,8 @@ data class MockTemplate(
     val fileType: String,
     val fileSizeKb: Int,
     val content: String,
-    val description: String
+    val description: String,
+    val isStructured: Boolean = true
 )
 
 class DigitalEngineerViewModel(application: Application) : AndroidViewModel(application) {
@@ -65,6 +66,9 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
     // --- Sandbox Configuration States ---
     private val _selectedDomainInSandbox = MutableStateFlow(RiskDomain.CYBERSECURITY)
     val selectedDomainInSandbox = _selectedDomainInSandbox.asStateFlow()
+
+    private val _isStructuredInput = MutableStateFlow(true)
+    val isStructuredInput = _isStructuredInput.asStateFlow()
 
     private val _selectedTemplateId = MutableStateFlow("CYBER_PASS")
     val selectedTemplateId = _selectedTemplateId.asStateFlow()
@@ -271,6 +275,93 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
             description = "A classic audit issue where the files are completely compliant in parameters, but fall outside the scoped fiscal window of Q1 2026 (10/15/2025 vs Q1 2026)."
         ),
         MockTemplate(
+            id = "CYBER_UNSTRUCTURED_PASS",
+            domainId = "cybersecurity",
+            title = "Cybersec Policy Memo (Compliant)",
+            fileName = "Cybersecurity_Policy_Memo_Q1_2026.txt",
+            fileType = "TXT",
+            fileSizeKb = 3,
+            content = """
+                MEMORANDUM OF RISK CONTROL COMPLIANCE
+                To: Audit Committee / Sainath Parmani
+                From: Cybersecurity Operations Division
+                Date: 2026-02-15
+                Target Host Environment: Production (PRD-IP9)
+                Control Operational Date: 2026-02-15
+                Subject: Production Access Audits for PRD-IP9
+                
+                This memorandum outlines the active controls over internal host directory structures and systems. 
+                In accordance with Q1 2026 reporting baselines, we verify that multi-factor authentication (MFA) is fully enabled and active across all accounts in production scope. No accounts are left un-MFA'd. The host environments were audited and are compliant with PRD-IP9 specifications.
+            """.trimIndent(),
+            description = "A compliance memorandum in raw text format confirming complete MFA compliance on production servers.",
+            isStructured = false
+        ),
+        MockTemplate(
+            id = "CYBER_UNSTRUCTURED_FAIL",
+            domainId = "cybersecurity",
+            title = "Cybersec Incident Log (Non-Compliant)",
+            fileName = "AD_MFA_Exception_Email.txt",
+            fileType = "TXT",
+            fileSizeKb = 4,
+            content = """
+                Subject: EXCEPTION LOG: Production Server Access Breach
+                From: SecOps Incident Response Desk
+                To: Audit Ingestion Board
+                Date: 2026-01-22
+                Target Host Environment: Production (PRD-IP9)
+                Control Operational Date: 2026-01-22
+                
+                This is to notify you that during our daily audit of production host PRD-IP9, we uncovered a policy gap.
+                We detected that two users (U203 and U204) logged in from external nodes without MFA Enabled status. Their MFA status was flagged as FALSE during an active session on January 15, 2026. This fails the reporting baseline for standard production accounts.
+            """.trimIndent(),
+            description = "Unstructured email thread detailing active accounts with MFA disabled during Q1 2026.",
+            isStructured = false
+        ),
+        MockTemplate(
+            id = "CREDIT_UNSTRUCTURED_PASS",
+            domainId = "credit_risk",
+            title = "Underwriting Minutes (Compliant Narrative)",
+            fileName = "Underwriting_Minutes_Q1.txt",
+            fileType = "TXT",
+            fileSizeKb = 5,
+            content = """
+                CREDIT UNDERWRITING REGULATORY SUMMARY MINUTES
+                Meeting Date: 2026-01-15
+                Chairperson: CreditDeskManager
+                Environment Node: PRD-IP9
+                Control Operational Date: 2026-01-15
+                
+                During the meeting, three applicant files were reviewed for eligibility:
+                1. APP-5001: Verified income, DTI ratio of 32.5%, Credit Score 720. Approved.
+                2. APP-5002: Verified income, DTI ratio of 41.0%, Credit Score 650. Approved.
+                3. APP-5003: Verified income, DTI ratio of 25.0%, Credit Score 590. Because the credit score is below the standard minimum limit, Senior Risk Officer committee issued an override with valid SRO signing hash AUTH-908B1. Approved under policy exception clauses.
+            """.trimIndent(),
+            description = "Underwriting board minutes with detailed paragraphs detailing correct applicant credit parameters.",
+            isStructured = false
+        ),
+        MockTemplate(
+            id = "CREDIT_UNSTRUCTURED_FAIL",
+            domainId = "credit_risk",
+            title = "Underwriting Minutes (Policy Breaches)",
+            fileName = "Underwriting_Minutes_Exceptions.txt",
+            fileType = "TXT",
+            fileSizeKb = 5,
+            content = """
+                CREDIT UNDERWRITING REGULATORY SUMMARY MINUTES - EXCEPTIONS
+                Meeting Date: 2026-01-20
+                Chairperson: UnderwritingDesk
+                Environment Node: PRD-IP9
+                Control Operational Date: 2026-01-20
+                
+                During the meeting, three applicant files were reviewed:
+                1. APP-6001: Verified income, DTI ratio of 48.5%, Credit Score 750. This exceeds the policy maximum limit of 43% DTI, but was allowed.
+                2. APP-6002: Unverified income, DTI ratio of 39.0%, Credit Score 680. Allowed.
+                3. APP-6003: Verified income, DTI ratio of 29.5%, Credit Score 550. No Senior Underwriter override signing code was present or issued.
+            """.trimIndent(),
+            description = "Unstructured meeting minutes displaying active policy infractions.",
+            isStructured = false
+        ),
+        MockTemplate(
             id = "CUSTOM",
             domainId = "cybersecurity",
             title = "Custom Text Sandbox",
@@ -293,12 +384,94 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
     // Set active domain inside sandbox
     fun setSandboxDomain(domain: RiskDomain) {
         _selectedDomainInSandbox.value = domain
-        // Auto-select first template matching this domain
-        val firstMatchingTemplate = mockTemplates.firstOrNull { it.domainId == domain.id }
+        val isStructured = _isStructuredInput.value
+        // Auto-select first template matching this domain and structured state
+        val firstMatchingTemplate = mockTemplates.firstOrNull { it.domainId == domain.id && it.isStructured == isStructured }
+            ?: mockTemplates.firstOrNull { it.domainId == domain.id }
         if (firstMatchingTemplate != null) {
             selectTemplate(firstMatchingTemplate.id)
         } else {
-            selectTemplate("CUSTOM")
+            _customFileText.value = if (isStructured) "Key,Value\nSampleKey,SampleValue" else getDefaultUnstructuredContent(domain)
+            _customFileName.value = if (isStructured) "custom_structured.csv" else "custom_unstructured.txt"
+            _selectedTemplateId.value = "CUSTOM"
+        }
+    }
+
+    fun setIsStructuredInput(structured: Boolean) {
+        _isStructuredInput.value = structured
+        val domain = _selectedDomainInSandbox.value
+        val template = mockTemplates.find { it.id == _selectedTemplateId.value }
+        // If template doesn't match the new structured setting, auto-switch
+        if (template == null || template.isStructured != structured || template.id == "CUSTOM") {
+            val matchingTemplate = mockTemplates.find { it.domainId == domain.id && it.isStructured == structured }
+            if (matchingTemplate != null) {
+                selectTemplate(matchingTemplate.id)
+            } else {
+                _customFileText.value = if (structured) "Key,Value\nSampleKey,SampleValue" else getDefaultUnstructuredContent(domain)
+                _customFileName.value = if (structured) "custom_structured.csv" else "custom_unstructured.txt"
+                _selectedTemplateId.value = "CUSTOM"
+            }
+        }
+    }
+
+    private fun getDefaultUnstructuredContent(domain: RiskDomain): String {
+        return when (domain) {
+            RiskDomain.CYBERSECURITY -> """
+                MEMORANDUM OF RISK CONTROL COMPLIANCE
+                To: Audit Committee / Sainath Parmani
+                From: Cybersecurity Operations Division
+                Date: 2026-02-15
+                Target Host Environment: Production (PRD-IP9)
+                Control Operational Date: 2026-02-15
+                Subject: Production Access Audits for PRD-IP9
+                
+                This memorandum outlines the active controls over internal host directory structures and systems. 
+                In accordance with Q1 2026 reporting baselines, we verify that multi-factor authentication (MFA) is fully enabled and active across all accounts in production scope. No accounts are left un-MFA'd. The host environments were audited and are compliant with PRD-IP9 specifications.
+            """.trimIndent()
+            RiskDomain.CREDIT_RISK -> """
+                CREDIT UNDERWRITING REGULATORY SUMMARY MINUTES
+                Meeting Date: 2026-01-15
+                Chairperson: CreditDeskManager
+                Environment Node: PRD-IP9
+                Control Operational Date: 2026-01-15
+                
+                During the meeting, three applicant files were reviewed for eligibility:
+                1. APP-5001: Verified income, DTI ratio of 32.5%, Credit Score 720. Approved.
+                2. APP-5002: Verified income, DTI ratio of 41.0%, Credit Score 650. Approved.
+                3. APP-5003: Verified income, DTI ratio of 25.0%, Credit Score 590. Because the credit score is below the standard minimum limit, Senior Risk Officer committee issued an override with valid SRO signing hash AUTH-908B1. Approved under policy exception clauses.
+            """.trimIndent()
+            RiskDomain.MARKET_RISK -> """
+                DAILY RISK DESK SUMMARY MEMO
+                Date: 2026-03-01
+                Author: RiskDashboard
+                Target Host Environment: Production (PRD-IP9)
+                Control Operational Date: 2026-03-01
+                
+                Our Daily Value-at-Risk (VaR) compliance calculations for Fixed Income, FX, and Commodities desks are detailed below.
+                All desks operated within their risk tolerances during the final week of February. Specifically, Commodities experienced a -$1,500,000 day but had 0 Breaches. Fixed Income remained well within parameters with $65M net exposure and no exceptions. Shock curves were fully evaluated.
+            """.trimIndent()
+            RiskDomain.LIQUIDITY_RISK -> """
+                LIQUIDITY TREASURY EXCEPTION SUMMARY
+                Date: 2026-03-10
+                Author: CashMgmtDept
+                Target Host Environment: Production (PRD-IP9)
+                Control Operational Date: 2026-03-10
+                
+                The Treasury department conducted a high-frequency compliance check on liquidity metrics.
+                The Liquidity Coverage Ratio (LCR) is calculated as High Quality Liquid Assets (HQLA) divided by Net Outflows.
+                On 2026-03-09, HQLA stood at $140,000,000 against net outflows of $120,000,000, achieving an LCR of 116.6% which exceeds our 100% baseline.
+                However, we must report an operational outage on March 8, 2026, where HQLA dipped to $120,000,000 and outflows reached $130,000,000, dropping the ratio to 92.3%, breaching the baseline limits.
+            """.trimIndent()
+            RiskDomain.APP_TECH -> """
+                SYSTEM OPS WEEKLY COMPLIANCE JOURNAL
+                Control Operational Date: 2026-02-20
+                Target Host Environment: Production (PRD-IP9)
+                Backup status: SUCCESS
+                Author: S. Parmani
+                
+                This week, standard SQL compressed stream backup run trigger executed. Backup status returned SUCCESS. Backup duration was logged and verified. Production logging level configured strictly to INFO, preventing verbose DB leaks.
+            """.trimIndent()
+            else -> "Write unstructured narrative audit text here..."
         }
     }
 
@@ -309,6 +482,7 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
         if (template != null) {
             _customFileText.value = template.content
             _customFileName.value = template.fileName
+            _isStructuredInput.value = template.isStructured
             if (template.domainId != "standard_qa") {
                 val matchingDomain = RiskDomain.values().find { it.id == template.domainId }
                 if (matchingDomain != null) {
@@ -386,26 +560,43 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
             }
 
             // Step 1: Webhook Trigger Ingestion
-            emitLog("🚀 Direct AuditBoard Webhook received for workpaper attachment.", 0.12f)
+            val isStructured = _isStructuredInput.value
+            if (isStructured) {
+                emitLog("🚀 Direct AuditBoard Webhook received for Structured Attachment (CSV/XLSX).", 0.10f)
+            } else {
+                emitLog("🚀 Direct AuditBoard Webhook received for Unstructured Text/Narrative (TXT/Email/PDF).", 0.10f)
+            }
             delay(400)
 
             // Step 2: Download securely from AuditBoard API
-            emitLog("📥 Ingesting file securely via AuditBoard REST API endpoint /api/v1/workpapers/...", 0.25f)
+            emitLog("📥 Ingesting file securely via AuditBoard REST API endpoint /api/v1/workpapers/...", 0.22f)
             delay(500)
 
             // Step 3: OCR Processing
-            emitLog("🔍 Initializing multimodal OCR engine and text parser...", 0.38f)
+            if (isStructured) {
+                emitLog("🔍 Initializing tabular data parser and grid column segmentator...", 0.35f)
+            } else {
+                emitLog("🔍 Initializing semantic NLP parser and natural language tokenizer...", 0.35f)
+            }
             delay(600)
 
             val extractedCharacters = fileContent.length
-            emitLog("📊 OCR extraction complete: Successfully segmentated $extractedCharacters characters and structures.", 0.52f)
+            if (isStructured) {
+                emitLog("📊 Grid segmentation complete: Successfully parsed $extractedCharacters characters across column matrices.", 0.52f)
+            } else {
+                emitLog("📊 Entity relation extraction complete: Found $extractedCharacters characters of semantic text prose.", 0.52f)
+            }
             delay(400)
 
             // Step 4: Rule orchestration starts
             emitLog("🧠 Orchestrating Hierarchical Validator Engine...", 0.65f)
             delay(300)
 
-            emitLog("📌 Checking Tier-1 Global Standard checks (Date range, size, host authorization)...", 0.72f)
+            if (isStructured) {
+                emitLog("📌 Checking Tier-1 Global Standard schema checks (Date headers, size boundaries, authorized PRD environment)...", 0.72f)
+            } else {
+                emitLog("📌 Scanning unstructured narrative for Tier-1 Global Standards (MFA mentions, dates, authorized PRD context)...", 0.72f)
+            }
             delay(450)
 
             emitLog("⚙️ Evaluated Risk-Domain validation Tier-2 controls for '${domain.displayName}'...", 0.85f)
@@ -613,31 +804,34 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
             // Check Access columns (CYBER_01_HEADERS)
             val headerCheck = activeRules.find { it.ruleId == "CYBER_01_HEADERS" }
             if (headerCheck != null) {
-                if (content.contains("User ID") && content.contains("Status") && content.contains("MFA Enabled")) {
-                    passesList.add("✓ PASS: [CYBER_01_HEADERS] Layout Schema Check. All required user attributes columns detected.")
+                val hasHeaders = content.contains("User ID") && content.contains("Status") && content.contains("MFA Enabled")
+                val hasNarrative = content.contains("memorandum of risk control") || content.contains("verify that multi-factor authentication") || content.contains("formal operational sign-off")
+                if (hasHeaders || hasNarrative) {
+                    passesList.add("✓ PASS: [CYBER_01_HEADERS] Layout Schema & Semantic Check. Required user attributes or compliance statements detected.")
                 } else {
                     scoreSum -= headerCheck.weight
-                    failuresList.add("✗ FAIL: [CYBER_01_HEADERS] Layout schema mismatch. Active Directory extract is missing required security status headers. Remediation: Re-export access directories retaining 'User ID', 'Status', 'MFA Enabled', and 'Last Login Date' headers.")
+                    failuresList.add("✗ FAIL: [CYBER_01_HEADERS] Schema & Narrative mismatch. Document lacks required security headers or policy validation statements. Remediation: Re-export access files retaining 'User ID', 'Status', 'MFA Enabled' headers, or upload an authorized security memo.")
                 }
             }
 
             // Check MFA Enforcement (CYBER_02_MFA_STATE)
             val mfaCheck = activeRules.find { it.ruleId == "CYBER_02_MFA_STATE" }
             if (mfaCheck != null) {
-                if (content.contains("FALSE") || content.contains("Active, FALSE") || content.contains("Active, FALSE, 2026")) {
+                val isFail = content.contains("FALSE") || content.contains("Active, FALSE") || content.contains("MFA status was flagged as FALSE") || content.contains("without MFA Enabled status")
+                if (isFail) {
                     // Spot active account with MFA FALSE
                     scoreSum -= mfaCheck.weight
-                    failuresList.add("✗ FAIL: [CYBER_02_MFA_STATE] Security Infraction. One or more active users were found with 'MFA Enabled Status = FALSE'. Remediation: Secure active accounts immediately with Multi-Factor Authentication. Revoke credentials until resolved.")
+                    failuresList.add("✗ FAIL: [CYBER_02_MFA_STATE] Security Infraction. Active users detected with 'MFA Enabled Status = FALSE'. Remediation: Enable Multi-Factor Authentication immediately on all active production logins.")
                 } else {
-                    passesList.add("✓ PASS: [CYBER_02_MFA_STATE] MFA configuration. All active directory entries are multi-factor authenticated.")
+                    passesList.add("✓ PASS: [CYBER_02_MFA_STATE] MFA configuration. All active directory and host access entries are multi-factor authenticated.")
                 }
             }
 
             // Inactive Accounts checks (CYBER_03_INACTIVE_ACC)
             val inactiveCheck = activeRules.find { it.ruleId == "CYBER_03_INACTIVE_ACC" }
             if (inactiveCheck != null) {
-                if (content.contains("Terminated, FALSE, 2024")) {
-                    passesList.add("✓ PASS: [CYBER_03_INACTIVE_ACC] Terminated Accounts Lockout. Terminated/Inactive accounts show legacy login inactivity exceeds 90 days.")
+                if (content.contains("Terminated, FALSE, 2024") || content.contains("MFA requirements are enforced")) {
+                    passesList.add("✓ PASS: [CYBER_03_INACTIVE_ACC] Terminated/Inactive lockout. No active sessions identified exceeding modern inactivity standards.")
                 } else {
                     passesList.add("✓ PASS: [CYBER_03_INACTIVE_ACC] Access records check.")
                 }
@@ -659,7 +853,7 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
             // CREDIT_02_INC_VERIFY
             val incomeCheck = activeRules.find { it.ruleId == "CREDIT_02_INC_VERIFY" }
             if (incomeCheck != null) {
-                if (content.contains("Unverified")) {
+                if (content.contains("Unverified") || content.contains("Unverified income")) {
                     scoreSum -= incomeCheck.weight
                     failuresList.add("✗ FAIL: [CREDIT_02_INC_VERIFY] Credit Verification Gap. Found active underwriting files marked as 'Unverified' income source. Remediation: Upload pay stubs, tax records, or employer confirmation documents.")
                 } else {
@@ -670,7 +864,7 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
             // CREDIT_03_APP_OVERRIDE
             val overrideCheck = activeRules.find { it.ruleId == "CREDIT_03_APP_OVERRIDE" }
             if (overrideCheck != null) {
-                if (content.contains("550 | None")) {
+                if (content.contains("550 | None") || content.contains("550. No Senior Underwriter override")) {
                     scoreSum -= overrideCheck.weight
                     failuresList.add("✗ FAIL: [CREDIT_03_APP_OVERRIDE] Committee Sign-Off Missing. Credit applications with score < 620 fail to display Senior Underwriter override hash code key. Remediation: Request senior risk officer committee hash signing codes.")
                 } else {

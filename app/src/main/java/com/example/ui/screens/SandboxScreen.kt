@@ -191,9 +191,74 @@ fun SandboxScreen(viewModel: DigitalEngineerViewModel) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Horizontal carousel of templates matching the scope
+                    val isStructuredInput by viewModel.isStructuredInput.collectAsState()
+
+                    // Ingestion Mode Selector Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .background(Slate50, RoundedCornerShape(12.dp))
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Structured Data Choice Button
+                        Button(
+                            onClick = { viewModel.setIsStructuredInput(true) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isStructuredInput) Color.White else Color.Transparent,
+                                contentColor = if (isStructuredInput) Teal700 else Slate500
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = if (isStructuredInput) 2.dp else 0.dp
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f).height(36.dp),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = "Structured",
+                                modifier = Modifier.size(16.dp),
+                                tint = if (isStructuredInput) Teal600 else Slate400
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Structured Data", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        }
+
+                        // Unstructured Data Choice Button
+                        Button(
+                            onClick = { viewModel.setIsStructuredInput(false) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (!isStructuredInput) Color.White else Color.Transparent,
+                                contentColor = if (!isStructuredInput) Teal700 else Slate500
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = if (!isStructuredInput) 2.dp else 0.dp
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f).height(36.dp),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Unstructured",
+                                modifier = Modifier.size(16.dp),
+                                tint = if (!isStructuredInput) Teal600 else Slate400
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Unstructured Narratives", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Horizontal carousel of templates matching the scope and ingestion type
                     val matchingTemplates = viewModel.mockTemplates.filter {
-                        it.domainId == selectedDomain.id || it.id == "CUSTOM" || it.id == "OUT_OF_WINDOW"
+                        (it.domainId == selectedDomain.id && it.isStructured == isStructuredInput) ||
+                        it.id == "CUSTOM" ||
+                        it.id == "OUT_OF_WINDOW"
                     }
 
                     FlowRow(
@@ -251,7 +316,7 @@ fun SandboxScreen(viewModel: DigitalEngineerViewModel) {
                     OutlinedTextField(
                         value = customText,
                         onValueChange = { viewModel.updateCustomText(it) },
-                        label = { Text("Document Extracted Parameters Grid") },
+                        label = { Text(if (isStructuredInput) "Document Extracted Parameters Grid" else "Narrative Evidence Statement / Email Thread") },
                         textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Slate800),
                         minLines = 4,
                         maxLines = 10,
