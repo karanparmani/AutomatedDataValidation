@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: automated-data-validation
+    runtime: node
+    plan: free
+    rootDir: web
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production

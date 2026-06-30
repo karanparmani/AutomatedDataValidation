@@ -1,21 +1,36 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Automated Data Validation
 
-# Run and deploy your AI Studio app
+Automated Data Validation is an evidence validation concept for audit, risk, and control workflows. The original Android prototype remains in `app/`; the new `web/` application refactors the same idea into a demoable browser console and REST intelligence layer that can integrate with enterprise applications.
 
-This contains everything you need to run your app locally.
+## Web Intelligence Layer
 
-View your app in AI Studio: https://ai.studio/apps/80cd0eb5-83d0-40b5-926b-9c2d3167ab77
+The web app provides:
 
-## Run Locally
+- An operations dashboard for evidence validation runs.
+- A sandbox for structured and unstructured control evidence.
+- Tier-1 standard QA checks and Tier-2 domain controls.
+- `POST /api/validate` for enterprise integrations.
+- Writeback-ready disposition payloads for AuditBoard or other GRC systems.
+- Docker and Render hosting configuration.
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+Run it locally:
 
+```bash
+cd web
+npm start
+```
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
+Open `http://localhost:3000`.
+
+See [web/README.md](web/README.md) for the API contract and hosting steps. The root-level `render.yaml` is configured for a Render Blueprint deployment.
+
+## Android Prototype
+
+**Prerequisites:** [Android Studio](https://developer.android.com/studio)
+
+1. Open Android Studio.
+2. Select **Open** and choose this project directory.
+3. Allow Android Studio to import the Gradle project.
+4. Create `.env` in the project directory and set `GEMINI_API_KEY` if you want the optional Gemini-backed path.
+5. Remove `signingConfig = signingConfigs.getByName("debugConfig")` from `app/build.gradle.kts` if Android Studio flags it.
+6. Run the app on an emulator or physical device.
