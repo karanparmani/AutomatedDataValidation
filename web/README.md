@@ -10,6 +10,7 @@ This refactor turns the Android proof of concept into a browser demo and REST in
 - Edit rule definitions from the Rules view without changing code.
 - Add configurable matchers for `contains`, `not_contains`, `regex`, `date_window`, and `min_length`.
 - Reset the rule catalog back to the seeded defaults.
+- Generate AI auditor guidance with remediation recommendations, follow-up questions, and additional evidence requests when `OPENAI_API_KEY` is configured.
 
 ## Run Locally
 
@@ -43,6 +44,26 @@ Content-Type: application/json
 
 The response includes the evidence score, status, rule findings, remediation recommendations, and a writeback payload for the source system.
 
+When `OPENAI_API_KEY` is configured on the server, validation responses also include `aiInsights`.
+
+```json
+{
+  "aiInsights": {
+    "gapSummary": "The validation engine detected an MFA exception...",
+    "auditorRecommendations": ["..."],
+    "followUpQuestions": ["..."],
+    "additionalEvidenceNeeded": ["..."],
+    "riskSeverity": "medium",
+    "confidence": "high",
+    "ruleReferences": ["CYBER_02_MFA_STATE"],
+    "source": "openai",
+    "status": "ready"
+  }
+}
+```
+
+If the API key is absent or the AI call fails, the app returns fallback rule-based guidance and keeps the validation workflow available.
+
 ### Rule Management
 
 ```http
@@ -51,6 +72,7 @@ POST /api/rules
 PUT /api/rules/:ruleId
 DELETE /api/rules/:ruleId
 POST /api/rules/reset
+POST /api/intelligence
 ```
 
 Example configurable rule:
@@ -85,6 +107,10 @@ Example configurable rule:
 2. In Render, create a new Blueprint or Web Service from the repository.
 3. If using the included root-level `render.yaml`, Render will deploy the `web` directory as a Node web service.
 4. If configuring manually, set root directory to `web`, build command to `npm install`, start command to `npm start`, and health check path to `/api/health`.
+5. Add server-side environment variables:
+   - `NODE_ENV=production`
+   - `OPENAI_API_KEY=<your OpenAI API key>`
+   - Optional: `OPENAI_MODEL=gpt-4o-mini`
 
 The included root-level `render.yaml` is ready for Render Blueprint configuration.
 

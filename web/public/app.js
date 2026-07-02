@@ -352,7 +352,50 @@ function renderResult() {
         </div>
       `).join("")}
     </div>
+    ${renderAiInsights(result.aiInsights)}
     <pre class="code-block"><code>${escapeHtml(JSON.stringify(result.enterpriseWriteback, null, 2))}</code></pre>
+  `;
+}
+
+function renderAiInsights(insights) {
+  if (!insights) {
+    return "";
+  }
+
+  const statusLabel = insights.status === "ready" ? "OpenAI" : insights.status === "not_configured" ? "Fallback" : "Fallback";
+  return `
+    <section class="ai-panel">
+      <div class="ai-header">
+        <div>
+          <h2>AI Auditor Guidance</h2>
+          <p>${escapeHtml(insights.gapSummary)}</p>
+        </div>
+        <span class="status-pill ${insights.riskSeverity || "medium"}">${escapeHtml(statusLabel)}</span>
+      </div>
+      ${insights.message ? `<p class="ai-note">${escapeHtml(insights.message)}</p>` : ""}
+      <div class="ai-grid">
+        ${renderInsightList("Recommendations", insights.auditorRecommendations)}
+        ${renderInsightList("Follow-up Questions", insights.followUpQuestions)}
+        ${renderInsightList("Evidence Needed", insights.additionalEvidenceNeeded)}
+      </div>
+      <div class="ai-meta">
+        <span>Severity: <b>${escapeHtml(insights.riskSeverity)}</b></span>
+        <span>Confidence: <b>${escapeHtml(insights.confidence)}</b></span>
+        <span>Rules: <b>${escapeHtml((insights.ruleReferences || []).join(", "))}</b></span>
+      </div>
+    </section>
+  `;
+}
+
+function renderInsightList(title, items) {
+  const list = Array.isArray(items) && items.length ? items : ["No guidance returned."];
+  return `
+    <div class="ai-card">
+      <strong>${escapeHtml(title)}</strong>
+      <ul>
+        ${list.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
   `;
 }
 

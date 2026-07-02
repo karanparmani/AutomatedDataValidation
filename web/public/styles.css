@@ -410,6 +410,22 @@ label {
   background: #ffe4e6;
 }
 
+.status-pill.low {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.status-pill.medium {
+  color: #78350f;
+  background: #fef3c7;
+}
+
+.status-pill.high,
+.status-pill.critical {
+  color: #881337;
+  background: #ffe4e6;
+}
+
 form {
   display: grid;
   gap: 11px;
@@ -524,6 +540,65 @@ textarea {
   border-color: #bbf7d0;
 }
 
+.ai-panel {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius);
+  background: #f0f9ff;
+}
+
+.ai-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ai-header p,
+.ai-note,
+.ai-meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.ai-note {
+  margin-bottom: 12px;
+}
+
+.ai-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ai-card {
+  padding: 12px;
+  border: 1px solid #dbeafe;
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.ai-card ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ai-card li + li {
+  margin-top: 6px;
+}
+
+.ai-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .rule-row {
   display: grid;
   grid-template-columns: minmax(160px, 0.8fr) minmax(220px, 1.3fr) 80px 150px;
@@ -596,7 +671,8 @@ textarea {
   .content-grid,
   .sandbox-grid,
   .integration-grid,
-  .rules-layout {
+  .rules-layout,
+  .ai-grid {
     grid-template-columns: 1fr;
   }
 }

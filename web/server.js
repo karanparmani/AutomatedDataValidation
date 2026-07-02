@@ -3,6 +3,7 @@ const http = require("http");
 const path = require("path");
 const { URL } = require("url");
 const { evaluateEvidence } = require("./lib/engine");
+const { generateAuditIntelligence } = require("./lib/intelligence");
 const { deleteRule, getCatalog, getRules, resetRules, upsertRule } = require("./lib/store");
 
 const port = Number(process.env.PORT || 3000);
@@ -69,10 +70,15 @@ const server = http.createServer(async (request, response) => {
         });
       }
 
-      const result = evaluateEvidence(payload, getRules());
+      const activeRules = getRules();
+      const result = evaluateEvidence(payload, activeRules);
+      const aiInsights = payload.includeIntelligence === false
+        ? null
+        : await generateAuditIntelligence(result, activeRules);
       const record = {
         id: `run_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
         ...result,
+        aiInsights,
         sourceSystem: payload.sourceSystem || "AuditBoard",
         createdBy: payload.createdBy || "Digital Engineer Webhook"
       };
@@ -81,6 +87,18 @@ const server = http.createServer(async (request, response) => {
         history.pop();
       }
       return sendJson(response, 200, record);
+    }
+
+    if (url.pathname === "/api/intelligence" && request.method === "POST") {
+      const payload = await readJson(request);
+      if (!payload.validationResult) {
+        return sendJson(response, 400, {
+          error: "validationResult is required"
+        });
+      }
+
+      const aiInsights = await generateAuditIntelligence(payload.validationResult, getRules());
+      return sendJson(response, 200, { aiInsights });
     }
 
     return serveStatic(url.pathname, response);
