@@ -1,7 +1,8 @@
 const state = {
   catalog: null,
   history: [],
-  selectedResult: null
+  selectedResult: null,
+  editingRuleId: null
 };
 
 const viewTitles = {
@@ -51,25 +52,34 @@ function bindActions() {
 
   document.getElementById("template-select").addEventListener("change", loadSelectedTemplate);
 
+  document.getElementById("evidence-file").addEventListener("change", loadEvidenceFile);
+
   document.getElementById("validation-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     await runValidation({
       sourceSystem: "AuditBoard",
       domainId: form.get("domainId"),
+      dataMode: form.get("dataMode"),
       fileName: form.get("fileName"),
       fileType: form.get("fileType"),
       content: form.get("content")
     });
   });
+
+  document.getElementById("rule-form").addEventListener("submit", saveRule);
+  document.getElementById("new-rule").addEventListener("click", () => setRuleForm());
+  document.getElementById("reset-rules").addEventListener("click", resetRules);
 }
 
 async function loadCatalog() {
   const response = await fetch("/api/catalog");
   state.catalog = await response.json();
   renderDomainOptions();
+  renderRuleDomainOptions();
   syncTemplateOptions();
   loadSelectedTemplate();
+  setRuleForm();
 }
 
 async function loadHistory() {
@@ -83,6 +93,7 @@ async function runValidation(templateOrPayload) {
     sourceSystem: "AuditBoard",
     workpaperId: `WP-2026-${Math.floor(100 + Math.random() * 900)}`,
     domainId: templateOrPayload.domainId,
+    dataMode: templateOrPayload.dataMode || inferDataMode(templateOrPayload),
     fileName: templateOrPayload.fileName,
     fileType: templateOrPayload.fileType,
     fileSizeKb: templateOrPayload.fileSizeKb,
@@ -112,6 +123,17 @@ function renderDomainOptions() {
   }).join("");
 }
 
+function renderRuleDomainOptions() {
+  const select = document.getElementById("rule-domain");
+  const options = [
+    { id: "standard_qa", displayName: "Global Standard QA" },
+    ...state.catalog.domains
+  ];
+  select.innerHTML = options.map((domain) => {
+    return `<option value="${domain.id}">${escapeHtml(domain.displayName)}</option>`;
+  }).join("");
+}
+
 function syncTemplateOptions() {
   const domainId = document.getElementById("domain-select").value;
   const select = document.getElementById("template-select");
@@ -127,7 +149,19 @@ function loadSelectedTemplate() {
   if (!template) return;
   document.getElementById("file-name").value = template.fileName;
   document.getElementById("file-type").value = template.fileType;
+  document.getElementById("data-mode").value = template.isStructured === false ? "unstructured" : "structured";
   document.getElementById("evidence-content").value = template.content;
+}
+
+async function loadEvidenceFile(event) {
+  const file = event.currentTarget.files && event.currentTarget.files[0];
+  if (!file) return;
+
+  const text = await file.text();
+  document.getElementById("file-name").value = file.name;
+  document.getElementById("file-type").value = inferFileType(file.name);
+  document.getElementById("data-mode").value = inferDataMode({ fileName: file.name, fileType: inferFileType(file.name), content: text });
+  document.getElementById("evidence-content").value = text;
 }
 
 function renderDashboard() {
@@ -193,12 +227,96 @@ function renderRunList(runs) {
 function renderRules() {
   const table = document.getElementById("rules-table");
   table.innerHTML = state.catalog.rules.map((rule) => `
-    <div class="rule-row">
-      <span>${escapeHtml(rule.ruleId)}</span>
+    <div class="rule-row ${rule.isActive ? "" : "inactive-rule"}">
+      <span>
+        ${escapeHtml(rule.ruleId)}
+        <small>${escapeHtml(rule.domainId)} | ${escapeHtml(rule.matchMode || "specialized")}</small>
+      </span>
       <strong>${escapeHtml(rule.title)}</strong>
       <span>${rule.weight} pts</span>
+      <div class="rule-actions">
+        <button class="secondary-button compact-button" type="button" data-edit-rule="${escapeHtml(rule.ruleId)}">Edit</button>
+        <button class="secondary-button compact-button danger-button" type="button" data-delete-rule="${escapeHtml(rule.ruleId)}">Delete</button>
+      </div>
     </div>
   `).join("");
+
+  table.querySelectorAll("[data-edit-rule]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const rule = state.catalog.rules.find((item) => item.ruleId === button.dataset.editRule);
+      setRuleForm(rule);
+    });
+  });
+
+  table.querySelectorAll("[data-delete-rule]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      await deleteRule(button.dataset.deleteRule);
+    });
+  });
+}
+
+function setRuleForm(rule) {
+  state.editingRuleId = rule ? rule.ruleId : null;
+  document.getElementById("rule-form-title").textContent = rule ? "Edit Rule" : "New Rule";
+  document.getElementById("rule-original-id").value = rule ? rule.ruleId : "";
+  document.getElementById("rule-domain").value = rule ? rule.domainId : "cybersecurity";
+  document.getElementById("rule-id").value = rule ? rule.ruleId : "";
+  document.getElementById("rule-title").value = rule ? rule.title : "";
+  document.getElementById("rule-description").value = rule ? rule.description : "";
+  document.getElementById("rule-match-mode").value = rule ? rule.matchMode || "specialized" : "contains";
+  document.getElementById("rule-type").value = rule ? rule.ruleType : "presence";
+  document.getElementById("rule-target").value = rule ? rule.targetField : "";
+  document.getElementById("rule-expected").value = rule ? rule.expectedValue : "";
+  document.getElementById("rule-weight").value = rule ? rule.weight : 10;
+  document.getElementById("rule-active").checked = rule ? rule.isActive !== false : true;
+}
+
+async function saveRule(event) {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const originalId = document.getElementById("rule-original-id").value;
+  const payload = {
+    domainId: form.get("domainId"),
+    ruleId: form.get("ruleId"),
+    title: form.get("title"),
+    description: form.get("description"),
+    matchMode: form.get("matchMode"),
+    ruleType: form.get("ruleType"),
+    targetField: form.get("targetField"),
+    expectedValue: form.get("expectedValue"),
+    weight: Number(form.get("weight")),
+    isActive: document.getElementById("rule-active").checked
+  };
+
+  const url = originalId ? `/api/rules/${encodeURIComponent(originalId)}` : "/api/rules";
+  const method = originalId ? "PUT" : "POST";
+  const response = await fetch(url, {
+    method,
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json();
+  state.catalog.rules = data.rules;
+  setRuleForm(data.rule);
+  renderRules();
+}
+
+async function deleteRule(ruleId) {
+  const response = await fetch(`/api/rules/${encodeURIComponent(ruleId)}`, { method: "DELETE" });
+  const data = await response.json();
+  state.catalog.rules = data.rules;
+  if (state.editingRuleId === ruleId) {
+    setRuleForm();
+  }
+  renderRules();
+}
+
+async function resetRules() {
+  const response = await fetch("/api/rules/reset", { method: "POST" });
+  const data = await response.json();
+  state.catalog.rules = data.rules;
+  setRuleForm();
+  renderRules();
 }
 
 function renderResult() {
@@ -223,6 +341,7 @@ function renderResult() {
       <div>
         <h2>${escapeHtml(result.fileName)}</h2>
         <p>${escapeHtml(result.enterpriseWriteback.disposition)} | ${escapeHtml(result.processingDurationMs)} ms</p>
+        <p>${escapeHtml(result.inputProfile || result.dataMode || "")}</p>
       </div>
     </div>
     <div class="findings-list">
@@ -235,6 +354,20 @@ function renderResult() {
     </div>
     <pre class="code-block"><code>${escapeHtml(JSON.stringify(result.enterpriseWriteback, null, 2))}</code></pre>
   `;
+}
+
+function inferFileType(fileName) {
+  const match = String(fileName || "").match(/\.([a-z0-9]+)$/i);
+  return match ? match[1].toUpperCase() : "TXT";
+}
+
+function inferDataMode(payload) {
+  const fileType = String(payload.fileType || inferFileType(payload.fileName)).toLowerCase();
+  if (["csv", "tsv", "json", "xlsx", "xls"].includes(fileType)) {
+    return "structured";
+  }
+  const content = String(payload.content || "").trim();
+  return /^[\[{]/.test(content) || content.includes(",") && content.includes("\n") ? "structured" : "unstructured";
 }
 
 function switchView(view) {

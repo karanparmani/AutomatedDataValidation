@@ -186,6 +186,24 @@ h2 {
   border-color: var(--line);
 }
 
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.compact-button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.danger-button {
+  color: #881337;
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
 .full-width {
   width: 100%;
 }
@@ -244,11 +262,17 @@ label {
 
 .content-grid,
 .sandbox-grid,
-.integration-grid {
+.integration-grid,
+.rules-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
   gap: 14px;
   margin-top: 14px;
+}
+
+.rules-layout {
+  grid-template-columns: minmax(360px, 0.8fr) minmax(0, 1.2fr);
+  margin-top: 0;
 }
 
 .panel {
@@ -420,6 +444,23 @@ textarea {
   line-height: 1.45;
 }
 
+.rule-editor textarea {
+  min-height: 100px;
+}
+
+.checkbox-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  color: var(--text);
+}
+
+.checkbox-line input {
+  width: 18px;
+  min-height: 18px;
+}
+
 .split-fields > div {
   flex: 1;
 }
@@ -485,9 +526,24 @@ textarea {
 
 .rule-row {
   display: grid;
-  grid-template-columns: 160px 1fr 90px;
+  grid-template-columns: minmax(160px, 0.8fr) minmax(220px, 1.3fr) 80px 150px;
   gap: 14px;
   align-items: center;
+}
+
+.rule-row small {
+  display: block;
+  margin-top: 3px;
+}
+
+.inactive-rule {
+  opacity: 0.58;
+}
+
+.rule-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .code-block {
@@ -539,7 +595,8 @@ textarea {
   .kpi-grid,
   .content-grid,
   .sandbox-grid,
-  .integration-grid {
+  .integration-grid,
+  .rules-layout {
     grid-template-columns: 1fr;
   }
 }
@@ -558,5 +615,9 @@ textarea {
 
   .rule-row {
     grid-template-columns: 1fr;
+  }
+
+  .rule-actions {
+    justify-content: flex-start;
   }
 }

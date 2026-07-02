@@ -7,8 +7,9 @@ Automated Data Validation is an evidence validation concept for audit, risk, and
 The web app provides:
 
 - An operations dashboard for evidence validation runs.
-- A sandbox for structured and unstructured control evidence.
+- A sandbox for structured and unstructured control evidence, including pasted text and uploaded `.csv`, `.json`, `.txt`, `.log`, and `.md` files.
 - Tier-1 standard QA checks and Tier-2 domain controls.
+- A configurable rule editor for creating, updating, disabling, deleting, and resetting validation rules.
 - `POST /api/validate` for enterprise integrations.
 - Writeback-ready disposition payloads for AuditBoard or other GRC systems.
 - Docker and Render hosting configuration.

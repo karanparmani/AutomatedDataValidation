@@ -110,6 +110,20 @@
 
               <div class="split-fields">
                 <div>
+                  <label for="data-mode">Input type</label>
+                  <select id="data-mode" name="dataMode">
+                    <option value="structured">Structured data</option>
+                    <option value="unstructured">Unstructured narrative</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="evidence-file">Evidence file</label>
+                  <input id="evidence-file" name="evidenceFile" type="file" accept=".txt,.csv,.tsv,.json,.log,.md">
+                </div>
+              </div>
+
+              <div class="split-fields">
+                <div>
                   <label for="file-name">File name</label>
                   <input id="file-name" name="fileName" type="text">
                 </div>
@@ -139,7 +153,87 @@
         </section>
 
         <section class="view" id="rules-view" aria-labelledby="view-title">
-          <section class="panel">
+          <div class="rules-layout">
+            <form class="panel rule-editor" id="rule-form">
+              <div class="panel-header">
+                <div>
+                  <h2 id="rule-form-title">New Rule</h2>
+                  <p>Configurable checks used by the validation engine</p>
+                </div>
+              </div>
+
+              <input id="rule-original-id" type="hidden">
+
+              <div class="split-fields">
+                <div>
+                  <label for="rule-domain">Domain</label>
+                  <select id="rule-domain" name="domainId"></select>
+                </div>
+                <div>
+                  <label for="rule-id">Rule ID</label>
+                  <input id="rule-id" name="ruleId" type="text" placeholder="CUSTOM_MFA_REQUIRED">
+                </div>
+              </div>
+
+              <label for="rule-title">Title</label>
+              <input id="rule-title" name="title" type="text" placeholder="Required MFA Statement">
+
+              <label for="rule-description">Remediation / description</label>
+              <textarea id="rule-description" name="description" rows="4" placeholder="Explain what to fix when this rule fails."></textarea>
+
+              <div class="split-fields">
+                <div>
+                  <label for="rule-match-mode">Match mode</label>
+                  <select id="rule-match-mode" name="matchMode">
+                    <option value="specialized">Specialized built-in</option>
+                    <option value="contains">Must contain value</option>
+                    <option value="not_contains">Must not contain value</option>
+                    <option value="regex">Regex must match</option>
+                    <option value="date_window">Date inside range</option>
+                    <option value="min_length">Minimum text length</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="rule-type">Rule type</label>
+                  <select id="rule-type" name="ruleType">
+                    <option value="presence">presence</option>
+                    <option value="value_assertion">value_assertion</option>
+                    <option value="date_window">date_window</option>
+                    <option value="format_match">format_match</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="split-fields">
+                <div>
+                  <label for="rule-target">Target field</label>
+                  <input id="rule-target" name="targetField" type="text" placeholder="MFA Enabled">
+                </div>
+                <div>
+                  <label for="rule-expected">Expected value / pattern</label>
+                  <input id="rule-expected" name="expectedValue" type="text" placeholder="TRUE">
+                </div>
+              </div>
+
+              <div class="split-fields">
+                <div>
+                  <label for="rule-weight">Weight</label>
+                  <input id="rule-weight" name="weight" type="number" min="0" max="100" value="10">
+                </div>
+                <label class="checkbox-line" for="rule-active">
+                  <input id="rule-active" name="isActive" type="checkbox" checked>
+                  Active
+                </label>
+              </div>
+
+              <div class="button-row">
+                <button class="primary-button" type="submit">Save Rule</button>
+                <button class="secondary-button" id="new-rule" type="button">New</button>
+                <button class="secondary-button danger-button" id="reset-rules" type="button">Reset Defaults</button>
+              </div>
+            </form>
+
+            <section class="panel">
             <div class="panel-header">
               <div>
                 <h2>Active Rule Catalog</h2>
@@ -147,7 +241,8 @@
               </div>
             </div>
             <div class="rules-table" id="rules-table"></div>
-          </section>
+            </section>
+          </div>
         </section>
 
         <section class="view" id="integration-view" aria-labelledby="view-title">
@@ -166,6 +261,7 @@ Content-Type: application/json
   "sourceSystem": "AuditBoard",
   "workpaperId": "WP-2026-184",
   "domainId": "cybersecurity",
+  "dataMode": "structured",
   "fileName": "AD_Access_Dump_Exceptions_Q1.csv",
   "fileType": "CSV",
   "content": "Target Host Environment: Production..."

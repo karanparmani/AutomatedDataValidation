@@ -2,6 +2,15 @@
 
 This refactor turns the Android proof of concept into a browser demo and REST intelligence layer that can sit between an enterprise application and an audit/GRC workflow.
 
+## Dynamic Validation Workflow
+
+- Accept structured evidence such as CSV, TSV, JSON, and spreadsheet-export text.
+- Accept unstructured evidence such as emails, policy memos, logs, and narrative workpaper notes.
+- Validate the submitted input against active Tier-1 and Tier-2 rules.
+- Edit rule definitions from the Rules view without changing code.
+- Add configurable matchers for `contains`, `not_contains`, `regex`, `date_window`, and `min_length`.
+- Reset the rule catalog back to the seeded defaults.
+
 ## Run Locally
 
 ```bash
@@ -25,6 +34,7 @@ Content-Type: application/json
   "sourceSystem": "AuditBoard",
   "workpaperId": "WP-2026-184",
   "domainId": "cybersecurity",
+  "dataMode": "structured",
   "fileName": "AD_Access_Dump_Exceptions_Q1.csv",
   "fileType": "CSV",
   "content": "Target Host Environment: Production (PRD-IP9)\nControl Operational Date: 2026-01-20\n..."
@@ -32,6 +42,33 @@ Content-Type: application/json
 ```
 
 The response includes the evidence score, status, rule findings, remediation recommendations, and a writeback payload for the source system.
+
+### Rule Management
+
+```http
+GET /api/rules
+POST /api/rules
+PUT /api/rules/:ruleId
+DELETE /api/rules/:ruleId
+POST /api/rules/reset
+```
+
+Example configurable rule:
+
+```json
+{
+  "domainId": "cybersecurity",
+  "ruleId": "CUSTOM_NO_FALSE_MFA",
+  "title": "No false MFA values",
+  "description": "Remove FALSE MFA values before approval.",
+  "ruleType": "value_assertion",
+  "targetField": "MFA Enabled",
+  "expectedValue": "FALSE",
+  "matchMode": "not_contains",
+  "weight": 20,
+  "isActive": true
+}
+```
 
 ## Enterprise Integration Shape
 

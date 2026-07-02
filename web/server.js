@@ -2,8 +2,8 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const { URL } = require("url");
-const { domains, rules, templates } = require("./lib/catalog");
 const { evaluateEvidence } = require("./lib/engine");
+const { deleteRule, getCatalog, getRules, resetRules, upsertRule } = require("./lib/store");
 
 const port = Number(process.env.PORT || 3000);
 const publicDir = path.join(__dirname, "public");
@@ -22,15 +22,34 @@ const server = http.createServer(async (request, response) => {
     }
 
     if (url.pathname === "/api/catalog" && request.method === "GET") {
-      return sendJson(response, 200, { domains, rules, templates });
+      return sendJson(response, 200, getCatalog());
     }
 
     if (url.pathname === "/api/rules" && request.method === "GET") {
-      return sendJson(response, 200, { rules });
+      return sendJson(response, 200, { rules: getRules() });
+    }
+
+    if (url.pathname === "/api/rules" && request.method === "POST") {
+      const payload = await readJson(request);
+      return sendJson(response, 200, upsertRule(payload));
+    }
+
+    if (url.pathname === "/api/rules/reset" && request.method === "POST") {
+      return sendJson(response, 200, { rules: resetRules() });
+    }
+
+    const ruleMatch = url.pathname.match(/^\/api\/rules\/([^/]+)$/);
+    if (ruleMatch && request.method === "PUT") {
+      const payload = await readJson(request);
+      return sendJson(response, 200, upsertRule(payload, decodeURIComponent(ruleMatch[1])));
+    }
+
+    if (ruleMatch && request.method === "DELETE") {
+      return sendJson(response, 200, deleteRule(decodeURIComponent(ruleMatch[1])));
     }
 
     if (url.pathname === "/api/templates" && request.method === "GET") {
-      return sendJson(response, 200, { templates });
+      return sendJson(response, 200, { templates: getCatalog().templates });
     }
 
     if (url.pathname === "/api/history" && request.method === "GET") {
@@ -50,7 +69,7 @@ const server = http.createServer(async (request, response) => {
         });
       }
 
-      const result = evaluateEvidence(payload);
+      const result = evaluateEvidence(payload, getRules());
       const record = {
         id: `run_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
         ...result,
