@@ -251,12 +251,12 @@ function renderRules() {
   const table = document.getElementById("rules-table");
   table.innerHTML = state.catalog.rules.map((rule) => `
     <div class="rule-row ${rule.isActive ? "" : "inactive-rule"}">
-      <span>
+      <span class="rule-meta">
         ${escapeHtml(rule.ruleId)}
         <small>${escapeHtml(rule.domainId)} | ${escapeHtml(rule.matchMode || "specialized")}</small>
       </span>
-      <strong>${escapeHtml(rule.title)}</strong>
-      <span>${rule.weight} pts</span>
+      <strong class="rule-title">${escapeHtml(rule.title)}</strong>
+      <span class="rule-points">${rule.weight} pts</span>
       <div class="rule-actions">
         <button class="secondary-button compact-button" type="button" data-edit-rule="${escapeHtml(rule.ruleId)}">Edit</button>
         <button class="secondary-button compact-button danger-button" type="button" data-delete-rule="${escapeHtml(rule.ruleId)}">Delete</button>

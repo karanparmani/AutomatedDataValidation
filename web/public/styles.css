@@ -253,6 +253,11 @@ h2 {
   gap: 10px;
 }
 
+.split-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .primary-button,
 .secondary-button {
   min-height: 40px;
@@ -459,8 +464,7 @@ label {
   background: var(--surface-muted);
 }
 
-.run-row strong,
-.rule-row strong {
+.run-row strong {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -560,6 +564,7 @@ textarea {
   gap: 9px;
   min-height: 40px;
   color: var(--text);
+  min-width: 0;
 }
 
 .checkbox-line input {
@@ -568,7 +573,7 @@ textarea {
 }
 
 .split-fields > div {
-  flex: 1;
+  min-width: 0;
 }
 
 .result-panel {
@@ -625,6 +630,8 @@ textarea {
 .rules-table {
   display: grid;
   gap: 9px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .finding-row,
@@ -721,9 +728,33 @@ textarea {
 
 .rule-row {
   display: grid;
-  grid-template-columns: minmax(160px, 0.8fr) minmax(220px, 1.3fr) 80px 150px;
-  gap: 14px;
+  grid-template-columns: minmax(120px, 0.75fr) minmax(0, 1.4fr) minmax(48px, auto) minmax(116px, auto);
+  gap: 12px;
   align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.rule-row > * {
+  min-width: 0;
+}
+
+.rule-meta {
+  overflow-wrap: anywhere;
+}
+
+.rule-title {
+  display: block;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.28;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.rule-points {
+  white-space: nowrap;
 }
 
 .rule-row small {
@@ -737,8 +768,10 @@ textarea {
 
 .rule-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+  min-width: 0;
 }
 
 .code-block {
@@ -834,9 +867,13 @@ textarea {
 @media (max-width: 620px) {
   .topbar,
   .topbar-actions,
-  .split-fields {
+  .button-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .split-fields {
+    grid-template-columns: 1fr;
   }
 
   .kpi-grid {
