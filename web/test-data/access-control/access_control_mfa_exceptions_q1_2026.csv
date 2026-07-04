@@ -1,0 +1,17 @@
+Target Host Environment: Production (PRD-IP9)
+Control Operational Date: 2026-02-28
+Scope Division: Global Corporate Directory Access Pull
+Evidence Owner: Identity Governance Operations
+Extract Source: Synthetic IAM access ledger
+Review Window: 2026-01-01 to 2026-03-31
+Exception Summary: Two active accounts show MFA disabled during the review window.
+
+User ID, Status, MFA Enabled, Last Login Date, Role, Application, Source IP, Access Action, Approval Ticket, Reviewer, Review Status, Notes
+U2001, Active, TRUE, 2026-02-27, Standard User, FinancePortal, 10.14.22.17, LOGIN_SUCCESS, IAM-2026-2102, A. Rivera, Approved, Normal business-hours access
+U2002, Active, FALSE, 2026-02-26, Standard User, HRVault, 10.14.31.44, LOGIN_SUCCESS, IAM-2026-2104, A. Rivera, Exception, MFA temporarily disabled after device migration
+U2003, Active, TRUE, 2026-02-24, Privileged Admin, ProdCluster Console, 10.14.41.08, PRIVILEGED_LOGIN, IAM-2026-2120, J. Shah, Approved, Privileged session reviewed
+U2004, Inactive, FALSE, 2025-10-15, Standard User, FinancePortal, 10.14.11.29, NO_LOGIN, IAM-2026-2123, J. Shah, Removed, Dormant account disabled before review
+U2005, Terminated, FALSE, 2024-12-09, Standard User, HRVault, 10.14.15.77, NO_LOGIN, IAM-2026-2127, M. Chen, Removed, Account removed from active access group
+U2006, Active, TRUE, 2026-02-28, Service Account, AuditExportService, 10.14.50.12, TOKEN_ROTATION, IAM-2026-2131, M. Chen, Approved, Noninteractive account with compensating controls
+U2007, Active, FALSE, 2026-02-21, Standard User, DataWarehouse, 10.14.37.91, LOGIN_SUCCESS, IAM-2026-2137, S. Patel, Exception, User retained active access without MFA Enabled status
+U2008, Active, TRUE, 2026-02-23, Read Only Auditor, EvidenceStore, 10.14.44.63, EVIDENCE_EXPORT, IAM-2026-2141, S. Patel, Approved, Quarterly access review evidence exported

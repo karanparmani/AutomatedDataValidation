@@ -1,0 +1,16 @@
+Target Host Environment: Production (PRD-IP9)
+Control Operational Date: 2026-02-28
+Scope Division: Global Corporate Directory Access Pull
+Evidence Owner: Identity Governance Operations
+Extract Source: Synthetic IAM access ledger
+Review Window: 2026-01-01 to 2026-03-31
+
+User ID, Status, MFA Enabled, Last Login Date, Role, Application, Source IP, Access Action, Approval Ticket, Reviewer, Review Status, Notes
+U1001, Active, TRUE, 2026-02-27, Standard User, FinancePortal, 10.14.22.17, LOGIN_SUCCESS, IAM-2026-1102, A. Rivera, Approved, Normal business-hours access
+U1002, Active, TRUE, 2026-02-26, Standard User, HRVault, 10.14.31.44, LOGIN_SUCCESS, IAM-2026-1104, A. Rivera, Approved, MFA challenge completed
+U1003, Active, TRUE, 2026-02-24, Privileged Admin, ProdCluster Console, 10.14.41.08, PRIVILEGED_LOGIN, IAM-2026-1120, J. Shah, Approved, Privileged session reviewed
+U1004, Inactive, TRUE, 2025-10-15, Standard User, FinancePortal, 10.14.11.29, NO_LOGIN, IAM-2026-1123, J. Shah, Removed, Dormant account disabled before review
+U1005, Terminated, TRUE, 2024-12-09, Standard User, HRVault, 10.14.15.77, NO_LOGIN, IAM-2026-1127, M. Chen, Removed, Account removed from active access group
+U1006, Active, TRUE, 2026-02-28, Service Account, AuditExportService, 10.14.50.12, TOKEN_ROTATION, IAM-2026-1131, M. Chen, Approved, Noninteractive account with compensating controls
+U1007, Active, TRUE, 2026-02-21, Standard User, DataWarehouse, 10.14.37.91, LOGIN_SUCCESS, IAM-2026-1137, S. Patel, Approved, MFA challenge completed
+U1008, Active, TRUE, 2026-02-23, Read Only Auditor, EvidenceStore, 10.14.44.63, EVIDENCE_EXPORT, IAM-2026-1141, S. Patel, Approved, Quarterly access review evidence exported

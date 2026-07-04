@@ -1,0 +1,18 @@
+Subject: Synthetic Q1 Access Control Review Exception
+Date: 2026-02-28
+Target Host Environment: Production (PRD-IP9)
+Control Operational Date: 2026-02-28
+Prepared By: Identity Governance Operations
+
+This synthetic access audit narrative summarizes the Q1 2026 review of production access for PRD-IP9 and the related ProdCluster console. The review covered human users, privileged administrators, service accounts, and read-only audit access for the period from 2026-01-01 through 2026-03-31.
+
+Most active users completed multi-factor authentication successfully. However, two active accounts require auditor follow-up. User U2002 accessed HRVault after a mobile device migration, and user U2007 accessed DataWarehouse from a corporate network segment. Both users logged in during the review window without MFA Enabled status. Their MFA status was flagged as FALSE during active sessions on February 21 and February 26, 2026.
+
+Evidence needed for closure:
+- Device migration approval for U2002
+- MFA enrollment confirmation for U2002 and U2007
+- Manager attestation for continued access
+- Updated directory extract showing corrected MFA Enabled status
+- Reviewer sign-off after remediation
+
+No terminated users were observed in active production groups. Inactive accounts U2004 and U2005 were removed from access scope before the quarterly certification was completed.
