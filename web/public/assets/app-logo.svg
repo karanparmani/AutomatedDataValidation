@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Validation intelligence logo</title>
+  <desc id="desc">A document with a check mark and connected data points.</desc>
+  <defs>
+    <linearGradient id="bg" x1="12" y1="8" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e8fbfc"/>
+      <stop offset="0.58" stop-color="#42b6c6"/>
+      <stop offset="1" stop-color="#2f9fad"/>
+    </linearGradient>
+    <filter id="shadow" x="6" y="6" width="52" height="54" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#041f33" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <path d="M12 49C25 40 39 42 52 30" fill="none" stroke="#e8fbfc" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+  <circle cx="18" cy="45" r="2.3" fill="#e8fbfc" opacity="0.7"/>
+  <circle cx="32" cy="42" r="2.3" fill="#e8fbfc" opacity="0.7"/>
+  <circle cx="48" cy="33" r="2.3" fill="#e8fbfc" opacity="0.7"/>
+  <g filter="url(#shadow)">
+    <path d="M20 12h18l8 8v28a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6V18a6 6 0 0 1 6-6Z" fill="#041f33"/>
+    <path d="M38 12v8h8" fill="#42b6c6"/>
+    <path d="M23 34.5 29.2 41 41 27" fill="none" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M23 22h9M23 27h6" fill="none" stroke="#8bdce5" stroke-width="2.4" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>
