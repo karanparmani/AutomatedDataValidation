@@ -1,29 +1,29 @@
 <svg width="900" height="420" viewBox="0 0 900 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Enterprise validation intelligence architecture</title>
   <desc id="desc">Enterprise applications send evidence to a validation intelligence layer, which scores controls and writes back disposition results.</desc>
-  <rect width="900" height="420" rx="8" fill="#f8fafc"/>
-  <rect x="54" y="68" width="188" height="284" rx="8" fill="#ffffff" stroke="#d1d5db"/>
-  <rect x="356" y="54" width="188" height="312" rx="8" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
-  <rect x="658" y="68" width="188" height="284" rx="8" fill="#ffffff" stroke="#d1d5db"/>
-  <text x="148" y="112" text-anchor="middle" fill="#111827" font-family="Arial, sans-serif" font-size="18" font-weight="700">Enterprise Apps</text>
-  <text x="148" y="154" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">AuditBoard</text>
-  <text x="148" y="184" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">GRC workflow</text>
-  <text x="148" y="214" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Evidence stores</text>
-  <text x="450" y="104" text-anchor="middle" fill="#0f766e" font-family="Arial, sans-serif" font-size="18" font-weight="700">Validation Intelligence</text>
-  <rect x="390" y="140" width="120" height="34" rx="8" fill="#ccfbf1"/>
-  <text x="450" y="162" text-anchor="middle" fill="#134e4a" font-family="Arial, sans-serif" font-size="13" font-weight="700">Extract</text>
-  <rect x="390" y="194" width="120" height="34" rx="8" fill="#dbeafe"/>
-  <text x="450" y="216" text-anchor="middle" fill="#1e3a8a" font-family="Arial, sans-serif" font-size="13" font-weight="700">Score</text>
-  <rect x="390" y="248" width="120" height="34" rx="8" fill="#fef3c7"/>
-  <text x="450" y="270" text-anchor="middle" fill="#78350f" font-family="Arial, sans-serif" font-size="13" font-weight="700">Remediate</text>
-  <text x="752" y="112" text-anchor="middle" fill="#111827" font-family="Arial, sans-serif" font-size="18" font-weight="700">Writeback</text>
-  <text x="752" y="154" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Disposition</text>
-  <text x="752" y="184" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Reviewer comments</text>
-  <text x="752" y="214" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Control evidence</text>
-  <path d="M252 210H340" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
-  <path d="M330 200L344 210L330 220" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M554 210H642" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
-  <path d="M632 200L646 210L632 220" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="298" y="190" text-anchor="middle" fill="#334155" font-family="Arial, sans-serif" font-size="12">POST /api/validate</text>
-  <text x="598" y="190" text-anchor="middle" fill="#334155" font-family="Arial, sans-serif" font-size="12">REST writeback</text>
+  <rect width="900" height="420" rx="8" fill="#eaf1f5"/>
+  <rect x="54" y="68" width="188" height="284" rx="8" fill="#ffffff" stroke="#cbdbe4"/>
+  <rect x="356" y="54" width="188" height="312" rx="8" fill="#ffffff" stroke="#2f9fad" stroke-width="2"/>
+  <rect x="658" y="68" width="188" height="284" rx="8" fill="#ffffff" stroke="#cbdbe4"/>
+  <text x="148" y="112" text-anchor="middle" fill="#061d2f" font-family="Arial, sans-serif" font-size="18" font-weight="700">Enterprise Apps</text>
+  <text x="148" y="154" text-anchor="middle" fill="#5a7488" font-family="Arial, sans-serif" font-size="14">AuditBoard</text>
+  <text x="148" y="184" text-anchor="middle" fill="#5a7488" font-family="Arial, sans-serif" font-size="14">GRC workflow</text>
+  <text x="148" y="214" text-anchor="middle" fill="#5a7488" font-family="Arial, sans-serif" font-size="14">Evidence stores</text>
+  <text x="450" y="104" text-anchor="middle" fill="#0b7f8c" font-family="Arial, sans-serif" font-size="18" font-weight="700">Validation Intelligence</text>
+  <rect x="390" y="140" width="120" height="34" rx="8" fill="#d7f6f8"/>
+  <text x="450" y="162" text-anchor="middle" fill="#041f33" font-family="Arial, sans-serif" font-size="13" font-weight="700">Extract</text>
+  <rect x="390" y="194" width="120" height="34" rx="8" fill="#e2f4f7"/>
+  <text x="450" y="216" text-anchor="middle" fill="#082b43" font-family="Arial, sans-serif" font-size="13" font-weight="700">Score</text>
+  <rect x="390" y="248" width="120" height="34" rx="8" fill="#fff2cf"/>
+  <text x="450" y="270" text-anchor="middle" fill="#6d4307" font-family="Arial, sans-serif" font-size="13" font-weight="700">Remediate</text>
+  <text x="752" y="112" text-anchor="middle" fill="#061d2f" font-family="Arial, sans-serif" font-size="18" font-weight="700">Writeback</text>
+  <text x="752" y="154" text-anchor="middle" fill="#5a7488" font-family="Arial, sans-serif" font-size="14">Disposition</text>
+  <text x="752" y="184" text-anchor="middle" fill="#5a7488" font-family="Arial, sans-serif" font-size="14">Reviewer comments</text>
+  <text x="752" y="214" text-anchor="middle" fill="#5a7488" font-family="Arial, sans-serif" font-size="14">Control evidence</text>
+  <path d="M252 210H340" stroke="#2f9fad" stroke-width="3" stroke-linecap="round"/>
+  <path d="M330 200L344 210L330 220" stroke="#2f9fad" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M554 210H642" stroke="#2f9fad" stroke-width="3" stroke-linecap="round"/>
+  <path d="M632 200L646 210L632 220" stroke="#2f9fad" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="298" y="190" text-anchor="middle" fill="#25465a" font-family="Arial, sans-serif" font-size="12">POST /api/validate</text>
+  <text x="598" y="190" text-anchor="middle" fill="#25465a" font-family="Arial, sans-serif" font-size="12">REST writeback</text>
 </svg>
