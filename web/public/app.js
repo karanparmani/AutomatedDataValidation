@@ -13,12 +13,35 @@ const viewTitles = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
+  bindSidebarToggle();
   bindNavigation();
   bindActions();
   await loadCatalog();
   await loadHistory();
   renderAll();
 });
+
+function bindSidebarToggle() {
+  const shell = document.querySelector(".app-shell");
+  const toggle = document.getElementById("sidebar-toggle");
+  const saved = window.localStorage.getItem("sidebarCollapsed") === "true";
+
+  shell.classList.toggle("sidebar-collapsed", saved);
+  updateSidebarToggle(toggle, saved);
+
+  toggle.addEventListener("click", () => {
+    const collapsed = !shell.classList.contains("sidebar-collapsed");
+    shell.classList.toggle("sidebar-collapsed", collapsed);
+    window.localStorage.setItem("sidebarCollapsed", String(collapsed));
+    updateSidebarToggle(toggle, collapsed);
+  });
+}
+
+function updateSidebarToggle(toggle, collapsed) {
+  toggle.setAttribute("aria-expanded", String(!collapsed));
+  toggle.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+  toggle.querySelector("span").textContent = collapsed ? "›" : "‹";
+}
 
 function bindNavigation() {
   document.querySelectorAll(".nav-item").forEach((button) => {

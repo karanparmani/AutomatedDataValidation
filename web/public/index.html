@@ -9,18 +9,23 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Primary">
-        <div class="brand">
-          <span class="brand-mark">DV</span>
-          <div>
-            <strong>Data Validation</strong>
-            <span>Intelligence Layer</span>
+        <div class="sidebar-top">
+          <div class="brand">
+            <span class="brand-mark">DV</span>
+            <div class="brand-copy">
+              <strong>Data Validation</strong>
+              <span>Intelligence Layer</span>
+            </div>
           </div>
+          <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">
+            <span aria-hidden="true">‹</span>
+          </button>
         </div>
         <nav class="nav-list">
-          <button class="nav-item active" data-view="dashboard" type="button">Dashboard</button>
-          <button class="nav-item" data-view="sandbox" type="button">Sandbox</button>
-          <button class="nav-item" data-view="rules" type="button">Rules</button>
-          <button class="nav-item" data-view="integration" type="button">Integration</button>
+          <button class="nav-item active" data-view="dashboard" data-short="D" type="button">Dashboard</button>
+          <button class="nav-item" data-view="sandbox" data-short="S" type="button">Sandbox</button>
+          <button class="nav-item" data-view="rules" data-short="R" type="button">Rules</button>
+          <button class="nav-item" data-view="integration" data-short="I" type="button">Integration</button>
         </nav>
         <div class="sidebar-footer">
           <span class="status-dot"></span>
