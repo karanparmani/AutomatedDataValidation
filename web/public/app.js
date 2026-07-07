@@ -2,7 +2,10 @@ const state = {
   catalog: null,
   history: [],
   selectedResult: null,
-  editingRuleId: null
+  editingRuleId: null,
+  agentDrafts: {},
+  agentLoading: null,
+  agentError: ""
 };
 
 const viewTitles = {
@@ -376,8 +379,10 @@ function renderResult() {
       `).join("")}
     </div>
     ${renderAiInsights(result.aiInsights)}
+    ${renderAgentWorkspace(result)}
     <pre class="code-block"><code>${escapeHtml(JSON.stringify(result.enterpriseWriteback, null, 2))}</code></pre>
   `;
+  bindAgentActions(result);
 }
 
 function renderAiInsights(insights) {
@@ -420,6 +425,214 @@ function renderInsightList(title, items) {
       </ul>
     </div>
   `;
+}
+
+function renderAgentWorkspace(result) {
+  const failedCount = (result.findings || []).filter((finding) => finding.status === "FAIL").length;
+  const drafts = state.agentDrafts[agentDraftKey(result)] || {};
+  const issueLoading = state.agentLoading === "issue";
+  const reportLoading = state.agentLoading === "report";
+  const issueDisabled = !failedCount || issueLoading || reportLoading;
+  const reportDisabled = issueLoading || reportLoading;
+
+  return `
+    <section class="agent-panel">
+      <div class="ai-header">
+        <div>
+          <h2>Self-Service Agents</h2>
+          <p>Generate stakeholder-ready drafts from the selected validation result.</p>
+        </div>
+        <span class="status-pill medium">Agents</span>
+      </div>
+      <div class="agent-actions">
+        <button class="secondary-button" type="button" data-agent="issue" ${issueDisabled ? "disabled" : ""}>
+          ${issueLoading ? "Drafting Issue..." : "Draft Issue"}
+        </button>
+        <button class="primary-button" type="button" data-agent="report" ${reportDisabled ? "disabled" : ""}>
+          ${reportLoading ? "Drafting Report..." : "Draft Report"}
+        </button>
+      </div>
+      ${!failedCount ? '<p class="ai-note">Issue drafting becomes available when at least one control finding fails.</p>' : ""}
+      ${state.agentError ? `<p class="agent-error">${escapeHtml(state.agentError)}</p>` : ""}
+      <div class="agent-drafts">
+        ${drafts.issue ? renderIssueDraft(drafts.issue) : ""}
+        ${drafts.report ? renderReportDraft(drafts.report) : ""}
+      </div>
+    </section>
+  `;
+}
+
+function bindAgentActions(result) {
+  document.querySelectorAll("[data-agent]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      await requestAgentDraft(button.dataset.agent, result);
+    });
+  });
+}
+
+async function requestAgentDraft(agentType, result) {
+  const key = agentDraftKey(result);
+  state.agentDrafts[key] = state.agentDrafts[key] || {};
+  state.agentLoading = agentType;
+  state.agentError = "";
+  renderResult();
+
+  try {
+    const response = await fetch(`/api/agents/${agentType}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        validationResult: result,
+        history: state.history.filter((run) => run.domainId === result.domainId).slice(0, 10)
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Agent request failed with status ${response.status}.`);
+    }
+
+    const data = await response.json();
+    state.agentDrafts[key][agentType] = agentType === "issue" ? data.issueDraft : data.reportDraft;
+  } catch (error) {
+    state.agentError = error.message || "Agent request failed.";
+  } finally {
+    state.agentLoading = null;
+    renderResult();
+  }
+}
+
+function renderIssueDraft(draft) {
+  return `
+    <article class="agent-draft-card">
+      <div class="agent-draft-header">
+        <div>
+          <h2>${escapeHtml(draft.agentName || "Issue Writing Agent")}</h2>
+          <p>${escapeHtml(draft.issueSummary)}</p>
+        </div>
+        <span class="status-pill ${draft.enterpriseIssueRecord?.severity || "medium"}">${escapeHtml(draft.status || "draft_ready")}</span>
+      </div>
+      <div class="agent-section-grid">
+        ${renderAgentSection("Testing Performed", draft.testingPerformed)}
+        ${renderAgentSection("Supporting Facts", draft.supportingFacts)}
+      </div>
+      <div class="agent-narrative">
+        <strong>Root Cause</strong>
+        <p>${escapeHtml(draft.rootCause)}</p>
+      </div>
+      <div class="agent-narrative">
+        <strong>Impact</strong>
+        <p>${escapeHtml(draft.impact)}</p>
+      </div>
+      <div class="agent-narrative">
+        <strong>Action Owner Message</strong>
+        <p>${escapeHtml(draft.actionOwnerMessage)}</p>
+      </div>
+      ${renderIssueRecord(draft.enterpriseIssueRecord)}
+      ${renderAgentMeta(draft)}
+    </article>
+  `;
+}
+
+function renderIssueRecord(record) {
+  if (!record) return "";
+  return `
+    <div class="agent-record">
+      <strong>Enterprise Issue Record</strong>
+      <dl>
+        <div><dt>Title</dt><dd>${escapeHtml(record.title)}</dd></div>
+        <div><dt>Severity</dt><dd>${escapeHtml(record.severity)} / ${escapeHtml(record.priority)}</dd></div>
+        <div><dt>Domain</dt><dd>${escapeHtml(record.domain)}</dd></div>
+        <div><dt>Target Due Date</dt><dd>${escapeHtml(record.targetDueDate)}</dd></div>
+        <div><dt>Related Rules</dt><dd>${escapeHtml((record.relatedRules || []).join(", "))}</dd></div>
+      </dl>
+      ${renderAgentSection("Required Actions", record.requiredActions)}
+    </div>
+  `;
+}
+
+function renderReportDraft(draft) {
+  return `
+    <article class="agent-draft-card">
+      <div class="agent-draft-header">
+        <div>
+          <h2>${escapeHtml(draft.reportTitle || "Control Assessment Report")}</h2>
+          <p>${escapeHtml(draft.executiveSummary)}</p>
+        </div>
+        <span class="status-pill ${draft.overallRating === "effective" ? "low" : "medium"}">${escapeHtml(draft.overallRating)}</span>
+      </div>
+      <div class="agent-section-grid">
+        ${renderAgentSection("Assessment Scope", draft.assessmentScope)}
+        ${renderAgentSection("Supporting Facts", draft.supportingFacts)}
+      </div>
+      <div class="agent-report-list">
+        <strong>Findings</strong>
+        ${(draft.findings || []).map((finding) => `
+          <div class="agent-row">
+            <b>${escapeHtml(finding.title)}</b>
+            <span>${escapeHtml(finding.severity)} | ${escapeHtml((finding.ruleReferences || []).join(", "))}</span>
+            <p>${escapeHtml(finding.summary)}</p>
+          </div>
+        `).join("")}
+      </div>
+      <div class="agent-report-list">
+        <strong>Action Plans</strong>
+        ${(draft.actionPlans || []).map((plan) => `
+          <div class="agent-row">
+            <b>${escapeHtml(plan.owner)}</b>
+            <span>Due ${escapeHtml(plan.dueDate)}</span>
+            <p>${escapeHtml(plan.action)}</p>
+            <p>${escapeHtml(plan.successCriteria)}</p>
+          </div>
+        `).join("")}
+      </div>
+      ${renderAppendix(draft.appendixControlsEvaluated)}
+      ${renderAgentSection("Management Attention", draft.managementAttention)}
+      ${renderAgentMeta(draft)}
+    </article>
+  `;
+}
+
+function renderAppendix(items) {
+  const rows = Array.isArray(items) ? items : [];
+  return `
+    <div class="agent-report-list">
+      <strong>Appendix: Controls Evaluated</strong>
+      ${rows.map((item) => `
+        <div class="agent-row compact">
+          <b>${escapeHtml(item.ruleId)} - ${escapeHtml(item.control)}</b>
+          <span>${escapeHtml(item.status)}</span>
+          <p>${escapeHtml(item.evidence)}</p>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderAgentSection(title, items) {
+  const list = Array.isArray(items) && items.length ? items : ["No content returned."];
+  return `
+    <div class="agent-section">
+      <strong>${escapeHtml(title)}</strong>
+      <ul>
+        ${list.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function renderAgentMeta(draft) {
+  return `
+    <div class="ai-meta">
+      <span>Source: <b>${escapeHtml(draft.source || "rules_engine")}</b></span>
+      <span>Status: <b>${escapeHtml(draft.agentStatus || "ready")}</b></span>
+      ${draft.model ? `<span>Model: <b>${escapeHtml(draft.model)}</b></span>` : ""}
+      ${draft.message ? `<span>${escapeHtml(draft.message)}</span>` : ""}
+    </div>
+  `;
+}
+
+function agentDraftKey(result) {
+  return result.id || `${result.fileName}:${result.processedAt}`;
 }
 
 function inferFileType(fileName) {

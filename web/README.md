@@ -11,6 +11,7 @@ This refactor turns the Android proof of concept into a browser demo and REST in
 - Add configurable matchers for `contains`, `not_contains`, `regex`, `date_window`, and `min_length`.
 - Reset the rule catalog back to the seeded defaults.
 - Generate AI auditor guidance with remediation recommendations, follow-up questions, and additional evidence requests when `OPENAI_API_KEY` is configured.
+- Generate self-service agent drafts for failed-control issue records and executive control assessment reports.
 
 ## Run Locally
 
@@ -64,6 +65,30 @@ When `OPENAI_API_KEY` is configured on the server, validation responses also inc
 
 If the API key is absent or the AI call fails, the app returns fallback rule-based guidance and keeps the validation workflow available.
 
+### Self-Service Agents
+
+```http
+POST /api/agents/issue
+POST /api/agents/report
+Content-Type: application/json
+```
+
+```json
+{
+  "validationResult": {
+    "score": 70,
+    "status": "WARNING",
+    "domainId": "cybersecurity",
+    "findings": []
+  },
+  "history": []
+}
+```
+
+- The Issue Writing Agent drafts an issue summary, testing performed, root cause, impact, action-owner message, and Enterprise Issue Management record.
+- The Report Writing Agent drafts an executive assessment summary, findings, supporting facts, action plans, and appendix of controls evaluated.
+- Both agents use `OPENAI_API_KEY` when available and return deterministic fallback drafts when the key is absent or the AI call fails.
+
 ### Rule Management
 
 ```http
@@ -73,6 +98,8 @@ PUT /api/rules/:ruleId
 DELETE /api/rules/:ruleId
 POST /api/rules/reset
 POST /api/intelligence
+POST /api/agents/issue
+POST /api/agents/report
 ```
 
 Example configurable rule:

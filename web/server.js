@@ -2,6 +2,7 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const { URL } = require("url");
+const { generateAssessmentReport, generateIssueDraft } = require("./lib/agents");
 const { evaluateEvidence } = require("./lib/engine");
 const { generateAuditIntelligence } = require("./lib/intelligence");
 const { deleteRule, getCatalog, getRules, resetRules, upsertRule } = require("./lib/store");
@@ -99,6 +100,30 @@ const server = http.createServer(async (request, response) => {
 
       const aiInsights = await generateAuditIntelligence(payload.validationResult, getRules());
       return sendJson(response, 200, { aiInsights });
+    }
+
+    if (url.pathname === "/api/agents/issue" && request.method === "POST") {
+      const payload = await readJson(request);
+      if (!payload.validationResult) {
+        return sendJson(response, 400, {
+          error: "validationResult is required"
+        });
+      }
+
+      const issueDraft = await generateIssueDraft(payload.validationResult, getRules());
+      return sendJson(response, 200, { issueDraft });
+    }
+
+    if (url.pathname === "/api/agents/report" && request.method === "POST") {
+      const payload = await readJson(request);
+      if (!payload.validationResult) {
+        return sendJson(response, 400, {
+          error: "validationResult is required"
+        });
+      }
+
+      const reportDraft = await generateAssessmentReport(payload.validationResult, payload.history || history, getRules());
+      return sendJson(response, 200, { reportDraft });
     }
 
     return serveStatic(url.pathname, response);

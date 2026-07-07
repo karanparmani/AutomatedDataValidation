@@ -56,6 +56,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .app-shell {
   min-height: 100vh;
   display: grid;
@@ -674,6 +679,14 @@ textarea {
   background: var(--blue-soft);
 }
 
+.agent-panel {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
 .ai-header {
   display: flex;
   align-items: flex-start;
@@ -724,6 +737,137 @@ textarea {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 12px;
+}
+
+.agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.agent-error {
+  padding: 10px 12px;
+  border: 1px solid var(--red-line);
+  border-radius: var(--radius);
+  color: var(--red-ink);
+  background: var(--red-surface);
+  font-size: 13px;
+}
+
+.agent-drafts {
+  display: grid;
+  gap: 12px;
+}
+
+.agent-draft-card,
+.agent-record,
+.agent-section,
+.agent-row {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.agent-draft-card {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.agent-draft-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agent-draft-header > div {
+  min-width: 0;
+}
+
+.agent-draft-header p,
+.agent-narrative p,
+.agent-row p {
+  margin-top: 5px;
+  color: var(--blue);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.agent-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.agent-section,
+.agent-record,
+.agent-row {
+  padding: 11px;
+}
+
+.agent-section ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--blue);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.agent-section li + li {
+  margin-top: 5px;
+}
+
+.agent-narrative strong,
+.agent-record > strong,
+.agent-report-list > strong,
+.agent-section > strong {
+  display: block;
+  font-size: 13px;
+}
+
+.agent-record dl {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0;
+}
+
+.agent-record dl div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.agent-record dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.agent-record dd {
+  margin: 0;
+  color: var(--blue);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.agent-report-list {
+  display: grid;
+  gap: 8px;
+}
+
+.agent-row span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.agent-row.compact p {
+  margin-top: 4px;
 }
 
 .rule-row {
@@ -881,6 +1025,19 @@ textarea {
   }
 
   .rule-row {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-draft-header,
+  .agent-record dl div {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-draft-header {
+    display: grid;
+  }
+
+  .agent-section-grid {
     grid-template-columns: 1fr;
   }
 
