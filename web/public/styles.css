@@ -239,6 +239,25 @@ p {
   margin: 0;
 }
 
+h1,
+h2,
+h3,
+p,
+li,
+dt,
+dd,
+b,
+strong,
+small,
+label,
+button,
+code,
+pre {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
 h1 {
   font-size: 28px;
   line-height: 1.2;
@@ -270,6 +289,7 @@ h2 {
   border-radius: var(--radius);
   border: 1px solid transparent;
   font-weight: 700;
+  white-space: normal;
 }
 
 .primary-button {
@@ -487,11 +507,14 @@ label {
   align-items: center;
   justify-content: center;
   min-width: 98px;
+  max-width: 100%;
   min-height: 28px;
   padding: 0 8px;
   border-radius: var(--radius);
   font-size: 12px;
   font-weight: 800;
+  text-align: center;
+  white-space: normal;
 }
 
 .status-pill.passed {
@@ -586,6 +609,11 @@ textarea {
   overflow: hidden;
 }
 
+.result-output {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .empty-state {
   display: grid;
   min-height: 360px;
@@ -624,8 +652,18 @@ textarea {
 .finding-row strong,
 .finding-row p,
 .ai-header p,
+.ai-card strong,
 .ai-card li,
 .ai-meta,
+.agent-draft-header h2,
+.agent-draft-header p,
+.agent-section,
+.agent-section li,
+.agent-narrative,
+.agent-record,
+.agent-report-list,
+.agent-row,
+.agent-row b,
 .code-block {
   overflow-wrap: anywhere;
   word-break: normal;
@@ -677,6 +715,8 @@ textarea {
   border: 1px solid var(--aqua-line);
   border-radius: var(--radius);
   background: var(--blue-soft);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .agent-panel {
@@ -685,14 +725,22 @@ textarea {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ai-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.ai-header > div {
+  min-width: 0;
+  flex: 1 1 220px;
 }
 
 .ai-header p,
@@ -708,7 +756,7 @@ textarea {
 
 .ai-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   gap: 10px;
   min-width: 0;
 }
@@ -718,6 +766,8 @@ textarea {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ai-card ul {
@@ -744,6 +794,7 @@ textarea {
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 12px;
+  min-width: 0;
 }
 
 .agent-error {
@@ -758,6 +809,8 @@ textarea {
 .agent-drafts {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .agent-draft-card,
@@ -765,6 +818,7 @@ textarea {
 .agent-section,
 .agent-row {
   min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-muted);
@@ -778,6 +832,7 @@ textarea {
 
 .agent-draft-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
@@ -785,6 +840,7 @@ textarea {
 
 .agent-draft-header > div {
   min-width: 0;
+  flex: 1 1 220px;
 }
 
 .agent-draft-header p,
@@ -799,8 +855,9 @@ textarea {
 
 .agent-section-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 10px;
+  min-width: 0;
 }
 
 .agent-section,
@@ -815,6 +872,7 @@ textarea {
   color: var(--blue);
   font-size: 13px;
   line-height: 1.45;
+  min-width: 0;
 }
 
 .agent-section li + li {
