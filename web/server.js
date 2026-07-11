@@ -63,6 +63,17 @@ const server = http.createServer(async (request, response) => {
       return sendJson(response, 200, { history });
     }
 
+    const reviewMatch = url.pathname.match(/^\/api\/history\/([^/]+)\/review$/);
+    if (reviewMatch && request.method === "POST") {
+      const record = history.find((item) => item.id === decodeURIComponent(reviewMatch[1]));
+      if (!record) {
+        return sendJson(response, 404, { error: "Validation record not found" });
+      }
+      const payload = await readJson(request);
+      record.auditorReview = sanitizeAuditorReview(payload.auditorReview);
+      return sendJson(response, 200, { record });
+    }
+
     if (url.pathname === "/api/validate" && request.method === "POST") {
       const payload = await readJson(request);
       if (!payload.domainId || !payload.content) {
@@ -203,4 +214,12 @@ function contentType(filePath) {
     ".json": "application/json; charset=utf-8"
   };
   return types[ext] || "application/octet-stream";
+}
+
+function sanitizeAuditorReview(value) {
+  return Object.fromEntries(
+    Object.entries(value && typeof value === "object" ? value : {})
+      .filter(([, decision]) => decision === "confirmed" || decision === "follow_up")
+      .map(([ruleId, decision]) => [String(ruleId).slice(0, 120), decision])
+  );
 }

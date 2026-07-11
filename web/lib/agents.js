@@ -1,5 +1,26 @@
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
+const claimTraceSchema = {
+  type: "array",
+  minItems: 1,
+  maxItems: 12,
+  items: {
+    type: "object",
+    additionalProperties: false,
+    required: ["classification", "statement", "basis", "confidence", "requiresConfirmation"],
+    properties: {
+      classification: {
+        type: "string",
+        enum: ["observed_fact", "rule_conclusion", "ai_hypothesis", "user_confirmed"]
+      },
+      statement: { type: "string" },
+      basis: { type: "string" },
+      confidence: { type: "string", enum: ["low", "medium", "high"] },
+      requiresConfirmation: { type: "boolean" }
+    }
+  }
+};
+
 const issueSchema = {
   type: "object",
   additionalProperties: false,
@@ -13,6 +34,7 @@ const issueSchema = {
     "actionOwnerMessage",
     "enterpriseIssueRecord",
     "supportingFacts",
+    "claimTrace",
     "source"
   ],
   properties: {
@@ -50,6 +72,7 @@ const issueSchema = {
       }
     },
     supportingFacts: { type: "array", minItems: 1, maxItems: 8, items: { type: "string" } },
+    claimTrace: claimTraceSchema,
     source: { type: "string", enum: ["openai", "rules_engine"] }
   }
 };
@@ -68,6 +91,7 @@ const reportSchema = {
     "actionPlans",
     "appendixControlsEvaluated",
     "managementAttention",
+    "claimTrace",
     "source"
   ],
   properties: {
@@ -126,6 +150,7 @@ const reportSchema = {
       }
     },
     managementAttention: { type: "array", minItems: 1, maxItems: 8, items: { type: "string" } },
+    claimTrace: claimTraceSchema,
     source: { type: "string", enum: ["openai", "rules_engine"] }
   }
 };
@@ -146,6 +171,9 @@ async function generateIssueDraft(validationResult, rules) {
       "Draft an issue record for action owners and an Enterprise Issue Management System.",
       "Use deterministic validation findings as source of truth.",
       "Do not invent additional failed controls, user populations, dates, or systems.",
+      "Treat root cause and impact as hypotheses unless supplied evidence or auditor review confirms them.",
+      "Use claimTrace to classify observed facts, rule conclusions, AI hypotheses, and user-confirmed judgments.",
+      "Every claimTrace item must identify its evidence basis, confidence, and confirmation requirement.",
       "Write in professional stakeholder-ready language.",
       "Be concise, specific, and action oriented."
     ],
@@ -165,6 +193,8 @@ async function generateAssessmentReport(validationResult, history, rules) {
       "Draft a concise control assessment report for executive management.",
       "Use only supplied validation results, rule findings, and recommendations.",
       "Separate findings, supporting facts, action plans, and appendix controls.",
+      "Use claimTrace to distinguish observed facts, rule conclusions, AI hypotheses, and user-confirmed judgments.",
+      "Do not present a root-cause hypothesis as confirmed unless the supplied auditor review confirms it.",
       "Do not overstate assurance. If history is limited, say the report is based on available runs.",
       "Write in clear risk and control language suitable for senior stakeholders."
     ],
@@ -238,6 +268,7 @@ function buildIssueContext(validationResult, rules) {
   return {
     validation: summarizeValidation(validationResult),
     failedFindings: failedFindings(validationResult),
+    auditorReview: validationResult.auditorReview || {},
     activeRules: rules.filter((rule) => failedRuleIds.includes(rule.ruleId)),
     requestedOutput: "Issue summary, testing performed, root cause, impact, action owner message, and Enterprise Issue Management System record draft."
   };
@@ -255,6 +286,7 @@ function buildReportContext(validationResult, history, rules) {
 
   return {
     currentValidation: summarizeValidation(validationResult),
+    auditorReview: validationResult.auditorReview || {},
     recentDomainValidations: domainHistory,
     activeRules: rules.filter((rule) => relevantRuleIds.has(rule.ruleId)),
     requestedOutput: "Executive management report with concise summary, findings, supporting facts, action plans, and appendix of controls evaluated."
@@ -275,6 +307,7 @@ function summarizeValidation(result) {
     processedAt: result.processedAt,
     recommendations: result.recommendations,
     enterpriseWriteback: result.enterpriseWriteback,
+    auditorReview: result.auditorReview || {},
     findings: (result.findings || []).map((finding) => ({
       ruleId: finding.ruleId,
       title: finding.title,
@@ -312,6 +345,7 @@ function buildFallbackIssue(validationResult) {
         recordStatus: "Not submitted"
       },
       supportingFacts: [`Validation status ${validationResult.status} with score ${validationResult.score}.`],
+      claimTrace: buildFallbackClaimTrace(validationResult, failed),
       source: "rules_engine"
     };
   }
@@ -340,6 +374,7 @@ function buildFallbackIssue(validationResult) {
       recordStatus: "Draft"
     },
     supportingFacts: failed.map((finding) => `${finding.ruleId}: ${finding.evidence}`),
+    claimTrace: buildFallbackClaimTrace(validationResult, failed),
     source: "rules_engine"
   };
 }
@@ -407,8 +442,69 @@ function buildFallbackReport(validationResult, history, rules) {
         "Provide refreshed evidence after remediation."
       ]
       : ["No immediate management escalation is indicated from the available validation evidence."],
+    claimTrace: buildFallbackClaimTrace(validationResult, failedFindings(validationResult)),
     source: "rules_engine"
   };
+}
+
+function buildFallbackClaimTrace(validationResult, findings) {
+  const selectedFindings = (findings || []).slice(0, 4);
+  const auditorReview = validationResult.auditorReview || {};
+
+  if (!selectedFindings.length) {
+    return [
+      {
+        classification: "observed_fact",
+        statement: `${validationResult.fileName} completed validation with status ${validationResult.status} and score ${validationResult.score}.`,
+        basis: `Validation result ${validationResult.id || validationResult.fileName}`,
+        confidence: "high",
+        requiresConfirmation: false
+      },
+      {
+        classification: "rule_conclusion",
+        statement: "No active control test returned a failed finding for the supplied evidence.",
+        basis: `${(validationResult.findings || []).length} configured control tests`,
+        confidence: "high",
+        requiresConfirmation: false
+      }
+    ];
+  }
+
+  const observedClaims = selectedFindings.map((finding) => ({
+    classification: "observed_fact",
+    statement: finding.evidence,
+    basis: `Evidence ${validationResult.fileName}; rule ${finding.ruleId}`,
+    confidence: "high",
+    requiresConfirmation: false
+  }));
+  const ruleClaims = selectedFindings.map((finding) => ({
+    classification: "rule_conclusion",
+    statement: `${finding.title} did not satisfy the configured control test.`,
+    basis: `Deterministic rule result ${finding.ruleId}`,
+    confidence: "high",
+    requiresConfirmation: false
+  }));
+  const reviewClaims = selectedFindings
+    .filter((finding) => auditorReview[finding.ruleId])
+    .slice(0, 2)
+    .map((finding) => ({
+      classification: "user_confirmed",
+      statement: auditorReview[finding.ruleId] === "confirmed"
+        ? `The auditor confirmed the ${finding.ruleId} exception.`
+        : `The auditor retained ${finding.ruleId} for process-owner follow-up.`,
+      basis: `Recorded auditor decision for ${finding.ruleId}`,
+      confidence: "high",
+      requiresConfirmation: false
+    }));
+  const hypothesisClaim = {
+    classification: "ai_hypothesis",
+    statement: "Potential causes include configuration drift, incomplete evidence, or an approved exception not included with the submission.",
+    basis: "Plausible causes inferred from the failed control findings; no direct root-cause evidence supplied",
+    confidence: "low",
+    requiresConfirmation: true
+  };
+
+  return [...observedClaims, ...ruleClaims, ...reviewClaims, hypothesisClaim];
 }
 
 function failedFindings(validationResult) {

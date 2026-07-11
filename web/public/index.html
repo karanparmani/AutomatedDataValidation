@@ -23,10 +23,10 @@
           </button>
         </div>
         <nav class="nav-list">
-          <button class="nav-item active" data-view="dashboard" data-short="D" type="button">Dashboard</button>
-          <button class="nav-item" data-view="sandbox" data-short="S" type="button">Sandbox</button>
-          <button class="nav-item" data-view="rules" data-short="R" type="button">Rules</button>
-          <button class="nav-item" data-view="integration" data-short="I" type="button">Integration</button>
+          <button class="nav-item active" data-view="dashboard" data-short="D" data-mobile="Home" type="button" aria-label="Dashboard" title="Dashboard">Dashboard</button>
+          <button class="nav-item" data-view="sandbox" data-short="T" data-mobile="Test" type="button" aria-label="Control Testing" title="Control Testing">Control Testing</button>
+          <button class="nav-item" data-view="rules" data-short="R" data-mobile="Rules" type="button" aria-label="Rules" title="Rules">Rules</button>
+          <button class="nav-item" data-view="integration" data-short="I" data-mobile="API" type="button" aria-label="Integration" title="Integration">Integration</button>
         </nav>
         <div class="sidebar-footer">
           <span class="status-dot"></span>
@@ -41,8 +41,8 @@
             <h1 id="view-title">Operational Dashboard</h1>
           </div>
           <div class="topbar-actions">
-            <button class="secondary-button" id="clear-history" type="button">Clear Runs</button>
-            <button class="primary-button" id="quick-run" type="button">Run Sample</button>
+            <button class="secondary-button" id="clear-history" type="button">Reset Session</button>
+            <button class="primary-button" id="quick-run" type="button">New Assessment</button>
           </div>
         </header>
 
@@ -50,7 +50,7 @@
           <div class="kpi-grid">
             <article class="metric-panel">
               <span>Average Score</span>
-              <strong id="avg-score">94%</strong>
+              <strong id="avg-score">--</strong>
               <small>Alignment across recent runs</small>
             </article>
             <article class="metric-panel">
@@ -99,63 +99,93 @@
         </section>
 
         <section class="view" id="sandbox-view" aria-labelledby="view-title">
-          <div class="sandbox-grid">
-            <form class="panel" id="validation-form">
-              <div class="panel-header">
+          <nav class="assessment-progress" aria-label="Assessment progress">
+            <button class="assessment-step active" type="button" data-assessment-step="evidence">
+              <span class="step-number">1</span>
+              <span><strong>Evidence</strong><small>Scope and input</small></span>
+            </button>
+            <button class="assessment-step" type="button" data-assessment-step="review" disabled>
+              <span class="step-number">2</span>
+              <span><strong>Test Results</strong><small>Review exceptions</small></span>
+            </button>
+            <button class="assessment-step" type="button" data-assessment-step="conclusion" disabled>
+              <span class="step-number">3</span>
+              <span><strong>Conclusions</strong><small>Confirm judgment</small></span>
+            </button>
+            <button class="assessment-step" type="button" data-assessment-step="publish" disabled>
+              <span class="step-number">4</span>
+              <span><strong>Draft &amp; Handoff</strong><small>Prepare outputs</small></span>
+            </button>
+          </nav>
+
+          <section class="assessment-stage active" data-assessment-panel="evidence">
+            <div class="stage-heading">
+              <p class="step-kicker">Step 1 of 4</p>
+              <h2>Prepare testing evidence</h2>
+              <p>Select the control domain and provide the evidence population.</p>
+            </div>
+
+            <form class="panel evidence-form" id="validation-form">
+              <div class="evidence-scope-grid">
                 <div>
-                  <h2>Evidence Sandbox</h2>
-                  <p>Policy scoring against standard and domain rules</p>
+                  <label for="domain-select">Control domain</label>
+                  <select id="domain-select" name="domainId"></select>
+                </div>
+                <div>
+                  <label for="template-select">Evidence scenario</label>
+                  <select id="template-select" name="templateId"></select>
                 </div>
               </div>
 
-              <label for="domain-select">Risk domain</label>
-              <select id="domain-select" name="domainId"></select>
-
-              <label for="template-select">Evidence template</label>
-              <select id="template-select" name="templateId"></select>
-
-              <div class="split-fields">
-                <div>
-                  <label for="data-mode">Input type</label>
-                  <select id="data-mode" name="dataMode">
-                    <option value="structured">Structured data</option>
-                    <option value="unstructured">Unstructured narrative</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="evidence-file">Evidence file</label>
-                  <input id="evidence-file" name="evidenceFile" type="file" accept=".txt,.csv,.tsv,.json,.log,.md">
-                </div>
-              </div>
-
-              <div class="split-fields">
-                <div>
-                  <label for="file-name">File name</label>
-                  <input id="file-name" name="fileName" type="text">
-                </div>
-                <div>
-                  <label for="file-type">File type</label>
-                  <input id="file-type" name="fileType" type="text">
-                </div>
+              <div class="file-input-block">
+                <label for="evidence-file">Evidence file</label>
+                <input id="evidence-file" name="evidenceFile" type="file" accept=".txt,.csv,.tsv,.json,.log,.md">
               </div>
 
               <label for="evidence-content">Evidence content</label>
               <textarea id="evidence-content" name="content" rows="14"></textarea>
 
-              <button class="primary-button full-width" type="submit">Validate Evidence</button>
-            </form>
-
-            <section class="panel result-panel">
-              <div class="panel-header">
-                <div>
-                  <h2>Validation Result</h2>
-                  <p>Disposition payload for enterprise writeback</p>
+              <details class="advanced-details">
+                <summary>Evidence metadata</summary>
+                <div class="metadata-grid">
+                  <div>
+                    <label for="data-mode">Input type</label>
+                    <select id="data-mode" name="dataMode">
+                      <option value="structured">Structured data</option>
+                      <option value="unstructured">Unstructured narrative</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="file-name">File name</label>
+                    <input id="file-name" name="fileName" type="text">
+                  </div>
+                  <div>
+                    <label for="file-type">File type</label>
+                    <input id="file-type" name="fileType" type="text">
+                  </div>
                 </div>
+              </details>
+
+              <p class="form-error hidden" id="validation-feedback" role="alert"></p>
+
+              <div class="stage-actions">
+                <span class="form-assurance">Rules and AI guidance run together after submission.</span>
+                <button class="primary-button" type="submit">Run Control Tests</button>
               </div>
-              <div id="result-empty" class="empty-state">No validation run selected.</div>
-              <div id="result-output" class="result-output hidden"></div>
-            </section>
-          </div>
+            </form>
+          </section>
+
+          <section class="assessment-stage" data-assessment-panel="review">
+            <div id="review-output" class="stage-output" aria-live="polite"></div>
+          </section>
+
+          <section class="assessment-stage" data-assessment-panel="conclusion">
+            <div id="conclusion-output" class="stage-output" aria-live="polite"></div>
+          </section>
+
+          <section class="assessment-stage" data-assessment-panel="publish">
+            <div id="publish-output" class="stage-output" aria-live="polite"></div>
+          </section>
         </section>
 
         <section class="view" id="rules-view" aria-labelledby="view-title">
@@ -245,6 +275,7 @@
                 <h2>Active Rule Catalog</h2>
                 <p>Tier-1 standards and Tier-2 domain controls</p>
               </div>
+              <button class="secondary-button" id="catalog-new-rule" type="button">New Rule</button>
             </div>
             <div class="rules-table" id="rules-table"></div>
             </section>

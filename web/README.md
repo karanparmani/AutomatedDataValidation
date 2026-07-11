@@ -12,6 +12,10 @@ This refactor turns the Android proof of concept into a browser demo and REST in
 - Reset the rule catalog back to the seeded defaults.
 - Generate AI auditor guidance with remediation recommendations, follow-up questions, and additional evidence requests when `OPENAI_API_KEY` is configured.
 - Generate self-service agent drafts for failed-control issue records and executive control assessment reports.
+- Guide business users through Evidence, Test Results, Conclusions, and Draft & Handoff stages.
+- Prioritize failed controls while retaining successful checks in a collapsed workpaper view.
+- Require an auditor judgment before stakeholder drafting becomes available.
+- Distinguish observed facts, deterministic rule conclusions, AI hypotheses, and user-confirmed judgments.
 
 ## Run Locally
 
@@ -79,14 +83,18 @@ Content-Type: application/json
     "score": 70,
     "status": "WARNING",
     "domainId": "cybersecurity",
-    "findings": []
+    "findings": [],
+    "auditorReview": {
+      "CYBER_02_MFA_STATE": "confirmed"
+    }
   },
   "history": []
 }
 ```
 
-- The Issue Writing Agent drafts an issue summary, testing performed, root cause, impact, action-owner message, and Enterprise Issue Management record.
+- The Issue Writing Agent drafts an issue summary, testing performed, root-cause hypothesis, potential impact, action-owner message, and Enterprise Issue Management record.
 - The Report Writing Agent drafts an executive assessment summary, findings, supporting facts, action plans, and appendix of controls evaluated.
+- Both drafts include `claimTrace` entries with a classification, statement, evidence basis, confidence level, and confirmation requirement.
 - Both agents use `OPENAI_API_KEY` when available and return deterministic fallback drafts when the key is absent or the AI call fails.
 
 ### Rule Management
@@ -100,6 +108,7 @@ POST /api/rules/reset
 POST /api/intelligence
 POST /api/agents/issue
 POST /api/agents/report
+POST /api/history/:id/review
 ```
 
 Example configurable rule:
