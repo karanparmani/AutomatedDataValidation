@@ -25,6 +25,7 @@
         <nav class="nav-list">
           <button class="nav-item active" data-view="dashboard" data-short="D" data-mobile="Home" type="button" aria-label="Dashboard" title="Dashboard">Dashboard</button>
           <button class="nav-item" data-view="sandbox" data-short="T" data-mobile="Test" type="button" aria-label="Control Testing" title="Control Testing">Control Testing</button>
+          <button class="nav-item" data-view="modules" data-short="A" data-mobile="Audits" type="button" aria-label="Audit Modules" title="Audit Modules">Audit Modules</button>
           <button class="nav-item" data-view="rules" data-short="R" data-mobile="Rules" type="button" aria-label="Rules" title="Rules">Rules</button>
           <button class="nav-item" data-view="integration" data-short="I" data-mobile="API" type="button" aria-label="Integration" title="Integration">Integration</button>
         </nav>
@@ -126,6 +127,27 @@
             </div>
 
             <form class="panel evidence-form" id="validation-form">
+              <section class="audit-context-linker" aria-labelledby="audit-context-title">
+                <div class="context-linker-header">
+                  <div>
+                    <p class="section-kicker">Audit linkage</p>
+                    <h3 id="audit-context-title">Tag this test to an existing audit</h3>
+                  </div>
+                  <span class="status-pill low">Linked</span>
+                </div>
+                <div class="audit-context-selects">
+                  <div>
+                    <label for="audit-project-select">Audit project</label>
+                    <select id="audit-project-select" name="auditProjectId"></select>
+                  </div>
+                  <div>
+                    <label for="audit-test-select">Control test</label>
+                    <select id="audit-test-select" name="auditTestId"></select>
+                  </div>
+                </div>
+                <div class="audit-context-preview" id="audit-context-preview"></div>
+              </section>
+
               <div class="evidence-scope-grid">
                 <div>
                   <label for="domain-select">Control domain</label>
@@ -186,6 +208,20 @@
           <section class="assessment-stage" data-assessment-panel="publish">
             <div id="publish-output" class="stage-output" aria-live="polite"></div>
           </section>
+        </section>
+
+        <section class="view" id="modules-view" aria-labelledby="view-title">
+          <div class="module-view-toolbar">
+            <div>
+              <p class="section-kicker">Enterprise audit portfolio</p>
+              <h2>Audit Modules</h2>
+            </div>
+            <div class="module-project-picker">
+              <label for="module-project-select">Audit project</label>
+              <select id="module-project-select"></select>
+            </div>
+          </div>
+          <div id="audit-module-output" class="audit-module-output"></div>
         </section>
 
         <section class="view" id="rules-view" aria-labelledby="view-title">

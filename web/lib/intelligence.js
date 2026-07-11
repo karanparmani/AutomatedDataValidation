@@ -140,7 +140,8 @@ function buildInsightContext(validationResult, rules) {
       fileName: validationResult.fileName,
       findings: validationResult.findings,
       recommendations: validationResult.recommendations,
-      enterpriseWriteback: validationResult.enterpriseWriteback
+      enterpriseWriteback: validationResult.enterpriseWriteback,
+      auditContext: validationResult.auditContext || null
     },
     activeRules: rules.filter((rule) => relevantRuleIds.has(rule.ruleId)),
     requestedOutput: "Recommendations, follow-up questions, and additional evidence needed for the auditor."

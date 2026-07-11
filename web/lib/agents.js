@@ -308,6 +308,7 @@ function summarizeValidation(result) {
     recommendations: result.recommendations,
     enterpriseWriteback: result.enterpriseWriteback,
     auditorReview: result.auditorReview || {},
+    auditContext: result.auditContext || null,
     findings: (result.findings || []).map((finding) => ({
       ruleId: finding.ruleId,
       title: finding.title,
@@ -323,6 +324,8 @@ function buildFallbackIssue(validationResult) {
   const failed = failedFindings(validationResult);
   const severity = inferSeverity(validationResult.score, validationResult.status);
   const sourceSystem = validationResult.enterpriseWriteback?.targetSystem || "Enterprise Issue Management";
+  const auditContext = validationResult.auditContext;
+  const issueSubject = auditContext?.controlName || validationResult.domainName || validationResult.domainId;
 
   if (!failed.length) {
     return {
@@ -353,17 +356,18 @@ function buildFallbackIssue(validationResult) {
   return {
     agentName: "Issue Writing Agent",
     status: "draft_ready",
-    issueSummary: `${failed.length} control exception${failed.length === 1 ? "" : "s"} detected in ${validationResult.domainName || validationResult.domainId}.`,
+    issueSummary: `${failed.length} control exception${failed.length === 1 ? "" : "s"} detected in ${issueSubject}.`,
     testingPerformed: [
       `Validated ${validationResult.fileName} against active standard and domain rules.`,
       `Reviewed failed rule evidence for ${failed.map((finding) => finding.ruleId).join(", ")}.`,
-      `Confirmed validation disposition of ${validationResult.status} with score ${validationResult.score}.`
+      `Confirmed validation disposition of ${validationResult.status} with score ${validationResult.score}.`,
+      ...(auditContext ? [`Mapped the result to ${auditContext.projectName} / ${auditContext.testName}.`] : [])
     ],
-    rootCause: `Process owner follow-up is required to determine whether ${failed.map((finding) => finding.title).join("; ")} resulted from configuration drift, incomplete evidence, or an approved exception not included in the submission.`,
-    impact: `The exception may reduce confidence that ${validationResult.domainName || "the assessed domain"} controls are operating as intended and may require remediation evidence before management reliance.`,
-    actionOwnerMessage: `Please review the failed control evidence for ${failed.map((finding) => finding.ruleId).join(", ")} and provide root cause, remediation plan, owner, target date, and updated evidence.`,
+    rootCause: `Process owner follow-up is required to determine whether the ${issueSubject} exception resulted from configuration drift, incomplete evidence, or an approved exception not included in the submission.`,
+    impact: `The exception may reduce confidence that ${issueSubject} is operating as intended and may require remediation evidence before management reliance.`,
+    actionOwnerMessage: `Please review the ${issueSubject} evidence for ${failed.map((finding) => finding.ruleId).join(", ")} and provide root cause, remediation plan, owner, target date, and updated evidence.`,
     enterpriseIssueRecord: {
-      title: `${validationResult.domainName || "Control"} exception: ${failed[0].title}`,
+      title: `${issueSubject}: ${failed[0].title} exception`,
       severity,
       priority: priorityForSeverity(severity),
       sourceSystem,
@@ -380,7 +384,13 @@ function buildFallbackIssue(validationResult) {
 }
 
 function buildFallbackReport(validationResult, history, rules) {
-  const domainRuns = (history || []).filter((run) => run.domainId === validationResult.domainId);
+  const auditContext = validationResult.auditContext;
+  const reportSubject = auditContext?.projectName || validationResult.domainName || "The domain";
+  const domainRuns = (history || []).filter((run) => {
+    const sameDomain = run.domainId === validationResult.domainId;
+    const sameAudit = !auditContext || run.auditContext?.projectId === auditContext.projectId;
+    return sameDomain && sameAudit;
+  });
   const runs = domainRuns.length ? domainRuns : [validationResult];
   const failed = runs.flatMap((run) => failedFindings(run).map((finding) => ({ ...finding, fileName: run.fileName })));
   const severity = inferSeverity(validationResult.score, validationResult.status);
@@ -388,12 +398,17 @@ function buildFallbackReport(validationResult, history, rules) {
 
   return {
     agentName: "Report Writing Agent",
-    reportTitle: `${validationResult.domainName || "Control"} Assessment Summary`,
+    reportTitle: `${auditContext?.projectName || validationResult.domainName || "Control"} Assessment Summary`,
     overallRating: failed.length ? validationResult.score < 70 ? "ineffective" : "needs_attention" : "effective",
     executiveSummary: failed.length
-      ? `${validationResult.domainName || "The domain"} assessment identified ${failed.length} exception${failed.length === 1 ? "" : "s"} across ${runs.length} available validation run${runs.length === 1 ? "" : "s"}. Management attention is required for remediation and evidence refresh.`
-      : `${validationResult.domainName || "The domain"} assessment did not identify failed controls across the available validation result set.`,
+      ? `${reportSubject} identified ${failed.length} exception${failed.length === 1 ? "" : "s"} across ${runs.length} available validation run${runs.length === 1 ? "" : "s"}. Management attention is required for remediation and evidence refresh.`
+      : `${reportSubject} did not identify failed controls across the available validation result set.`,
     assessmentScope: [
+      ...(auditContext ? [
+        `Audit project: ${auditContext.projectName}`,
+        `Process / risk: ${auditContext.processName} / ${auditContext.riskName}`,
+        `Control test: ${auditContext.controlName} / ${auditContext.testName} (${auditContext.testType})`
+      ] : []),
       `Domain: ${validationResult.domainName || validationResult.domainId}`,
       `Current evidence: ${validationResult.fileName}`,
       `Available validation runs reviewed: ${runs.length}`,

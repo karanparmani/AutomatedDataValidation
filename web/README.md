@@ -16,6 +16,9 @@ This refactor turns the Android proof of concept into a browser demo and REST in
 - Prioritize failed controls while retaining successful checks in a collapsed workpaper view.
 - Require an auditor judgment before stakeholder drafting becomes available.
 - Distinguish observed facts, deterministic rule conclusions, AI hypotheses, and user-confirmed judgments.
+- Link each assessment to an existing Audit Project and Design or Operating Effectiveness test.
+- Preserve Process, Risk, Control, and Test lineage through validation, issue drafting, reporting, and writeback.
+- Send failed-control issue drafts and assessment reports directly to the linked Audit Module.
 
 ## Run Locally
 
@@ -43,11 +46,15 @@ Content-Type: application/json
   "dataMode": "structured",
   "fileName": "AD_Access_Dump_Exceptions_Q1.csv",
   "fileType": "CSV",
-  "content": "Target Host Environment: Production (PRD-IP9)\nControl Operational Date: 2026-01-20\n..."
+  "content": "Target Host Environment: Production (PRD-IP9)\nControl Operational Date: 2026-01-20\n...",
+  "auditContext": {
+    "projectId": "AUD-2026-IAM",
+    "testId": "TEST-IAM-OE-01"
+  }
 }
 ```
 
-The response includes the evidence score, status, rule findings, remediation recommendations, and a writeback payload for the source system.
+The response includes the evidence score, status, rule findings, remediation recommendations, canonical audit lineage, and a writeback payload for the source system. `auditContext` is optional for backward compatibility. When provided, the server validates that the selected test exists and matches the validation domain.
 
 When `OPENAI_API_KEY` is configured on the server, validation responses also include `aiInsights`.
 
@@ -97,6 +104,19 @@ Content-Type: application/json
 - Both drafts include `claimTrace` entries with a classification, statement, evidence basis, confidence level, and confirmation requirement.
 - Both agents use `OPENAI_API_KEY` when available and return deterministic fallback drafts when the key is absent or the AI call fails.
 
+### Audit Modules
+
+```http
+GET /api/audit-modules
+POST /api/audit-modules/:projectId/issues
+POST /api/audit-modules/:projectId/reports
+Content-Type: application/json
+```
+
+Issue and report handoffs accept the linked `validationResult`, its generated `issueDraft` or `reportDraft`, and the selected `auditContext`. Issue handoff is limited to validation runs with failed findings. Repeating a handoff for the same validation run returns the existing record instead of creating a duplicate.
+
+The demo stores audit-module records in server memory. A production deployment should replace this store with the target audit platform API or a durable database while keeping the same endpoint contracts.
+
 ### Rule Management
 
 ```http
@@ -109,6 +129,9 @@ POST /api/intelligence
 POST /api/agents/issue
 POST /api/agents/report
 POST /api/history/:id/review
+GET /api/audit-modules
+POST /api/audit-modules/:projectId/issues
+POST /api/audit-modules/:projectId/reports
 ```
 
 Example configurable rule:

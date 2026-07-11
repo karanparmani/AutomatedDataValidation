@@ -10,6 +10,8 @@ The web app provides:
 - A sandbox for structured and unstructured control evidence, including pasted text and uploaded `.csv`, `.json`, `.txt`, `.log`, and `.md` files.
 - Tier-1 standard QA checks and Tier-2 domain controls.
 - A configurable rule editor for creating, updating, disabling, deleting, and resetting validation rules.
+- Audit project linkage across Process, Risk, Control, and Design or Operating Effectiveness tests.
+- Direct handoff of failed-control issue drafts and assessment reports into an Audit Modules workspace.
 - AI auditor guidance that can recommend remediation steps, follow-up questions, and additional evidence requests when `OPENAI_API_KEY` is configured server-side.
 - `POST /api/validate` for enterprise integrations.
 - Writeback-ready disposition payloads for AuditBoard or other GRC systems.

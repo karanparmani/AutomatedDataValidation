@@ -3,6 +3,12 @@ const http = require("http");
 const path = require("path");
 const { URL } = require("url");
 const { generateAssessmentReport, generateIssueDraft } = require("./lib/agents");
+const {
+  getAuditModules,
+  resolveAuditContext,
+  sendIssueToAuditModule,
+  sendReportToAuditModule
+} = require("./lib/auditModules");
 const { evaluateEvidence } = require("./lib/engine");
 const { generateAuditIntelligence } = require("./lib/intelligence");
 const { deleteRule, getCatalog, getRules, resetRules, upsertRule } = require("./lib/store");
@@ -25,6 +31,10 @@ const server = http.createServer(async (request, response) => {
 
     if (url.pathname === "/api/catalog" && request.method === "GET") {
       return sendJson(response, 200, getCatalog());
+    }
+
+    if (url.pathname === "/api/audit-modules" && request.method === "GET") {
+      return sendJson(response, 200, { projects: getAuditModules() });
     }
 
     if (url.pathname === "/api/rules" && request.method === "GET") {
@@ -83,7 +93,24 @@ const server = http.createServer(async (request, response) => {
       }
 
       const activeRules = getRules();
+      const auditContext = payload.auditContext
+        ? resolveAuditContext(payload.auditContext.projectId, payload.auditContext.testId)
+        : null;
+      if (payload.auditContext && !auditContext) {
+        return sendJson(response, 400, { error: "The selected audit project or control test is not valid." });
+      }
+      if (auditContext && auditContext.domainId !== payload.domainId) {
+        return sendJson(response, 400, { error: "The selected control test does not match the validation domain." });
+      }
       const result = evaluateEvidence(payload, activeRules);
+      result.auditContext = auditContext;
+      if (auditContext) {
+        result.enterpriseWriteback.auditModule = {
+          projectId: auditContext.projectId,
+          controlId: auditContext.controlId,
+          testId: auditContext.testId
+        };
+      }
       const aiInsights = payload.includeIntelligence === false
         ? null
         : await generateAuditIntelligence(result, activeRules);
@@ -99,6 +126,20 @@ const server = http.createServer(async (request, response) => {
         history.pop();
       }
       return sendJson(response, 200, record);
+    }
+
+    const auditModuleMatch = url.pathname.match(/^\/api\/audit-modules\/([^/]+)\/(issues|reports)$/);
+    if (auditModuleMatch && request.method === "POST") {
+      const projectId = decodeURIComponent(auditModuleMatch[1]);
+      const payload = await readJson(request);
+      try {
+        const result = auditModuleMatch[2] === "issues"
+          ? sendIssueToAuditModule(projectId, payload)
+          : sendReportToAuditModule(projectId, payload);
+        return sendJson(response, 200, result);
+      } catch (error) {
+        return sendJson(response, 400, { error: error.message });
+      }
     }
 
     if (url.pathname === "/api/intelligence" && request.method === "POST") {
