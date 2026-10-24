@@ -5,7 +5,6 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.BuildConfig
 import com.example.api.Content
 import com.example.api.DigitalEngineerAnalysisResult
 import com.example.api.GenerateContentRequest
@@ -636,10 +635,9 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    // Engine Router: evaluates via live Gemini call (if key is set) OR uses deterministic heuristic parser
+    // Engine Router: evaluates via live Gemini call (if the backend proxy is configured) OR uses deterministic heuristic parser
     private suspend fun evaluateEvidence(domain: RiskDomain, content: String, fileName: String): DigitalEngineerAnalysisResult {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        val hasApiKey = apiKey.isNotEmpty() && apiKey != "MY_GEMINI_API_KEY_DEFAULT_VALUE" && apiKey != "MY_GEMINI_API_KEY"
+        val hasGeminiBackend = RetrofitClient.isConfigured
 
         // Load rules dynamically from db
         val dbRules = withContext(Dispatchers.IO) {
@@ -648,10 +646,10 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
             rules.filter { (it.domainId == "standard_qa" || it.domainId == domain.id) && it.isActive }
         }
 
-        if (hasApiKey) {
+        if (hasGeminiBackend) {
             try {
                 Log.d("DigitalEngineer", "Calling Gemini API for processing evaluation.")
-                val rawResultText = callGeminiToAnalyze(content, fileName, domain, dbRules, apiKey)
+                val rawResultText = callGeminiToAnalyze(content, fileName, domain, dbRules)
                 if (rawResultText != null) {
                     val cleanedJson = cleanGeminiJsonResponse(rawResultText)
                     val result = parseGeminiResponse(cleanedJson)
@@ -701,8 +699,7 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
         content: String,
         fileName: String,
         domain: RiskDomain,
-        activeRules: List<ValidationRule>,
-        apiKey: String
+        activeRules: List<ValidationRule>
     ): String? = withContext(Dispatchers.IO) {
         val rulesSystemStr = activeRules.joinToString("\n") { rule ->
             "- Rule ID: ${rule.ruleId}, Title: ${rule.title}, Expected Value: ${rule.expectedValue}, Weight: ${rule.weight}, Rule Type: ${rule.ruleType}, Description: ${rule.description}"
@@ -738,7 +735,7 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
         )
 
         try {
-            val response = RetrofitClient.service.generateContent(apiKey, request)
+            val response = RetrofitClient.service.generateContent(request)
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
         } catch (e: Exception) {
             Log.e("DigitalEngineer", "Retrofit Gemini call crashed", e)
