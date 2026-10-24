@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.BuildConfig
+import com.example.api.RetrofitClient
 import com.example.data.RiskDomain
 import com.example.ui.DigitalEngineerViewModel
 import com.example.ui.theme.*
@@ -171,8 +171,7 @@ fun SandboxScreen(viewModel: DigitalEngineerViewModel) {
                         )
 
                         // Mode indicator (Demo vs LLM Live)
-                        val key = BuildConfig.GEMINI_API_KEY
-                        val hasRealKey = key.isNotEmpty() && key != "MY_GEMINI_API_KEY_DEFAULT_VALUE" && key != "MY_GEMINI_API_KEY"
+                        val hasRealKey = RetrofitClient.isConfigured
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = if (hasRealKey) Emerald50 else Slate50,
