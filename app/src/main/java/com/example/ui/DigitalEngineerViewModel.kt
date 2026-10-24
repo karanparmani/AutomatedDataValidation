@@ -10,6 +10,7 @@ import com.example.api.DigitalEngineerAnalysisResult
 import com.example.api.GenerateContentRequest
 import com.example.api.GenerationConfig
 import com.example.api.Part
+import com.example.api.AppCheckTokenException
 import com.example.api.RetrofitClient
 import com.example.data.EvidenceFile
 import com.example.data.RiskDomain
@@ -18,6 +19,7 @@ import com.example.data.ValidationRule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import retrofit2.HttpException
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -93,6 +95,10 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
 
     private val _sandboxResult = MutableStateFlow<DigitalEngineerAnalysisResult?>(null)
     val sandboxResult = _sandboxResult.asStateFlow()
+
+    // Set when the Gemini proxy rejects the app's App Check attestation, so the UI stops claiming live mode.
+    private val _geminiProxyAuthError = MutableStateFlow<String?>(null)
+    val geminiProxyAuthError = _geminiProxyAuthError.asStateFlow()
 
     // Preconfigured Templates List
     val mockTemplates = listOf(
@@ -654,9 +660,17 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
                     val cleanedJson = cleanGeminiJsonResponse(rawResultText)
                     val result = parseGeminiResponse(cleanedJson)
                     if (result != null) {
+                        _geminiProxyAuthError.value = null
                         return result
                     }
                 }
+            } catch (e: GeminiProxyAuthException) {
+                Log.e("DigitalEngineer", "Gemini proxy rejected App Check attestation.", e)
+                _geminiProxyAuthError.value = e.message
+                val offline = evaluateHeuristics(content, domain, dbRules)
+                return offline.copy(
+                    remediationLogs = "⚠ LIVE GEMINI UNAVAILABLE: ${e.message} This result was produced by the offline heuristic engine.\n\n${offline.remediationLogs}"
+                )
             } catch (e: Exception) {
                 Log.e("DigitalEngineer", "Gemini API error. Falling back to robust heuristic engine.", e)
             }
@@ -737,6 +751,14 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
         try {
             val response = RetrofitClient.service.generateContent(request)
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+        } catch (e: HttpException) {
+            if (e.code() == 401 || e.code() == 403) {
+                throw GeminiProxyAuthException("Gemini proxy rejected the request (HTTP ${e.code()}).", e)
+            }
+            Log.e("DigitalEngineer", "Gemini proxy returned HTTP ${e.code()}", e)
+            null
+        } catch (e: AppCheckTokenException) {
+            throw GeminiProxyAuthException("Could not obtain a Firebase App Check token.", e)
         } catch (e: Exception) {
             Log.e("DigitalEngineer", "Retrofit Gemini call crashed", e)
             null
@@ -936,3 +958,5 @@ class DigitalEngineerViewModel(application: Application) : AndroidViewModel(appl
         return DigitalEngineerAnalysisResult(finalScore, status, summaryTxt, formattedLogs)
     }
 }
+
+private class GeminiProxyAuthException(message: String, cause: Throwable) : Exception(message, cause)

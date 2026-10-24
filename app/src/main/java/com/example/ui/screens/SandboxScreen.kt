@@ -172,18 +172,39 @@ fun SandboxScreen(viewModel: DigitalEngineerViewModel) {
 
                         // Mode indicator (Demo vs LLM Live)
                         val hasRealKey = RetrofitClient.isConfigured
+                        val proxyAuthError by viewModel.geminiProxyAuthError.collectAsState()
+                        val authFailed = hasRealKey && proxyAuthError != null
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (hasRealKey) Emerald50 else Slate50,
+                            color = when {
+                                authFailed -> Rose50
+                                hasRealKey -> Emerald50
+                                else -> Slate50
+                            },
                             modifier = Modifier.padding(start = 4.dp),
-                            border = BorderStroke(1.dp, if (hasRealKey) Emerald500.copy(alpha = 0.15f) else Slate100)
+                            border = BorderStroke(
+                                1.dp,
+                                when {
+                                    authFailed -> Rose500.copy(alpha = 0.15f)
+                                    hasRealKey -> Emerald500.copy(alpha = 0.15f)
+                                    else -> Slate100
+                                }
+                            )
                         ) {
                             Text(
-                                text = if (hasRealKey) "LIVE GEMINI API" else "HEURISTIC OFFLINE",
+                                text = when {
+                                    authFailed -> "GEMINI AUTH FAILED"
+                                    hasRealKey -> "LIVE GEMINI API"
+                                    else -> "HEURISTIC OFFLINE"
+                                },
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (hasRealKey) Emerald600 else Slate500
+                                color = when {
+                                    authFailed -> Rose600
+                                    hasRealKey -> Emerald600
+                                    else -> Slate500
+                                }
                             )
                         }
                     }

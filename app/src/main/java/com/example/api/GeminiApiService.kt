@@ -70,7 +70,7 @@ data class DigitalEngineerAnalysisResult(
 // --- Retrofit Setup ---
 
 // Requests go to a backend proxy that holds the Gemini API key server-side and
-// authenticates callers; the key must never be compiled into the APK.
+// verifies each request's Firebase App Check token; the key must never be compiled into the APK.
 interface GeminiApiService {
     @POST("v1beta/models/gemini-3.5-flash:generateContent")
     suspend fun generateContent(
@@ -84,13 +84,15 @@ object RetrofitClient {
         .takeIf { it.startsWith("https://") && it != "https://MY_GEMINI_PROXY_URL" }
         ?.let { if (it.endsWith("/")) it else "$it/" }
 
-    val isConfigured: Boolean = proxyBaseUrl != null
+    val isConfigured: Boolean
+        get() = proxyBaseUrl != null && ProxyAppCheck.isEnabled
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
 
     private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(ProxyAppCheck.interceptor)
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
